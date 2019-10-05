@@ -102,6 +102,18 @@ namespace DataStructureVisualization
             */
             //test with Student object
             {
+                /*
+                String s = new String("xd");
+                DataStructureVisualizer.IsOverridden(s, "ToString");
+                StringWrapper sw = new StringWrapper("xdd");
+                DataStructureVisualizer.IsOverridden(sw, "ToString");
+                DataStructureVisualizer.IsOverridden(10, "ToString");
+                int i = 0;
+                DataStructureVisualizer.IsOverridden(i, "ToString");
+                char c = 'x';
+                DataStructureVisualizer.IsOverridden(c, "ToString");
+                */
+
                 Student testStudent = new Student();
                 StringWrapper[] temp = new StringWrapper[2];
                 temp[0] = new StringWrapper("WS1");

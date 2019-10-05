@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -16,10 +17,10 @@ namespace DataStructureVisualization
         private static Dictionary<Object, int> ProcessedNodes;
 
         //contains the names of members which should be displayed with values
-        private static List<String> Whitelist;
+        private static List<string> Whitelist;
 
         //contains the names of memebers which should be ignored while iterating data structure
-        private static List<String> Blacklist;
+        private static List<string> Blacklist;
 
         //streamwriter to insert nodes in the DOT file
         private static StreamWriter SW;
@@ -29,15 +30,16 @@ namespace DataStructureVisualization
 
         private static void InitializeHelpers()
         {
-            ProcessedNodes = new Dictionary<Object, int>();
+            ProcessedNodes = new Dictionary<object, int>();
             Whitelist = new List<string>();
             Blacklist = new List<string>();
             SB = new StringBuilder("");
         }
 
-        private static bool IsOverridden(this MethodInfo mInfo)
+
+        public static bool IsOverridden(dynamic obj, string methodName)
         {
-            return mInfo.GetBaseDefinition().DeclaringType != mInfo.DeclaringType;
+                return !(obj.ToString().Equals(obj.GetType().FullName));
         }
 
         /// <summary>
@@ -45,7 +47,7 @@ namespace DataStructureVisualization
         /// </summary>
         /// <param name="input">object whose data structure is being visualized</param>
         /// <param name="whitelistedMembers">names of members whose values will be visualized</param>
-        public static void Visualize(dynamic input, IEnumerable<String> whitelistedMembers)
+        public static void Visualize(dynamic input, IEnumerable<string> whitelistedMembers)
         {
             InitializeHelpers();
             foreach (var name in whitelistedMembers) Whitelist.Add(name);
@@ -176,7 +178,7 @@ namespace DataStructureVisualization
                 //add to processedNodes
                 ProcessedNodes.Add(member.GetValue(input), destId);
 
-                if (member.GetValue(input) is IEnumerable && !(member.GetValue(input) is String))
+                if (member.GetValue(input) is IEnumerable && !(member.GetValue(input) is string))
                 {
                     Console.WriteLine("is IENUM: " + member.Name);
 
@@ -223,7 +225,8 @@ namespace DataStructureVisualization
                             //ToString() is not overriden, iterate properties/fields of entry recursively
                             //TODO: better to find a solution that directly checks, need to find a fix for ambiguous exception
                             //MethodInfo methodInfo = entry.GetType().GetMethod("ToString").IsOverridden());
-                            if (entry is string || entry is System.ValueType)
+                            //if (entry is String || entry is System.ValueType)
+                            if (IsOverridden(entry, "ToString"))
                             {
                                 destId++;
                                 //creating node
@@ -287,12 +290,12 @@ namespace DataStructureVisualization
                     //when ToString() is not overriden it returns the .GetType().FullName and the name if possible
                     //cut away the name and check if ToString() has been overriden
                     //TODO: same as above, find solution to check if ToString() has been overridden
-                    if (member.ToString().Remove(member.ToString().IndexOf(" ")).Equals(member.GetValue(input).GetType().FullName))
+                    if (IsOverridden(member, "ToString"))
                     {
                         //get the actual object behind the member
                         var memberObject = member.GetValue(input);
 
-                        if (memberObject != null && !(memberObject is String))
+                        if (memberObject != null && !(memberObject is string))
                         {
                             sourceId = destId;
 
@@ -337,7 +340,7 @@ namespace DataStructureVisualization
                         var memberObject = member.GetValue(input);
 
                         //TODO: strings would get split into characters, need to find solution for such cases
-                        if (memberObject != null && !(memberObject is String))
+                        if (memberObject != null && !(memberObject is string))
                         {
                             //get all properties and call recursive function
                             foreach (var property in memberObject.GetType().GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
@@ -361,7 +364,7 @@ namespace DataStructureVisualization
                 foreach (var entry in Blacklist) if (member.Name.Contains(entry)) displayNode = false;
                 if (Whitelist.Contains(member.Name)) displayNode = true;
 
-                if (displayNode && !(member is String))
+                if (displayNode && !(member is string))
                 {
 
                     destId++;
@@ -394,7 +397,7 @@ namespace DataStructureVisualization
         /// <param name="memberType">type of member easier to determine beforehand</param>
         /// <param name="sourceId">source node to draw the edge from</param>
         /// <param name="destId">current id to identify nodes for visualization</param>
-        private static void VisualizeIList(dynamic input, dynamic member, String memberType, int sourceId, ref int destId)
+        private static void VisualizeIList(dynamic input, dynamic member, string memberType, int sourceId, ref int destId)
         {
             //exclude duplicate information stored in backing fields except for whitelisted member names
             //need to find a stable workaround eventually with Blacklist
@@ -402,7 +405,7 @@ namespace DataStructureVisualization
             foreach (var entry in Blacklist) if (member.Name.Contains(entry)) return;
 
             Type objType;
-            Type itemType = typeof(String);
+            Type itemType = typeof(string);
             if (memberType.Equals("Field")) objType = member.FieldType;
             else if (memberType.Equals("Property")) objType = member.PropertyType;
             else return;
