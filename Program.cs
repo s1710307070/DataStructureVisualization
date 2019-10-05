@@ -11,7 +11,7 @@ namespace DataStructureVisualization
             //several different data structures for testing
 
             //binary tree
-            /*
+            
             {
                 BinaryTree testTree = new BinaryTree();
                 Random rnd = new Random();
@@ -41,7 +41,7 @@ namespace DataStructureVisualization
                 //DataStructureVisualizer.Visualize(testNode1, testList2);
             }
 
-            */
+            
 
             //double linked list for testing
             {
@@ -58,7 +58,7 @@ namespace DataStructureVisualization
                 DataStructureVisualizer.Visualize(testDoubleList);
 
             }
-            /*
+            
 
             //tests with list of nodes as member
             {
@@ -99,7 +99,7 @@ namespace DataStructureVisualization
 
                 DataStructureVisualizer.Visualize(testSkipList, testList4);
             }
-
+            
             //test with Student object
             {
                 Student testStudent = new Student();
@@ -111,9 +111,9 @@ namespace DataStructureVisualization
 
                 List<String> testList5 = new List<String>() { "kidsList", "kids", "kidsAges", "wrappedStrings", "wrappedString" };
 
-                DataStructureVisualizer.Visualize(testStudent, testList5);
+                DataStructureVisualizer.Visualize(testStudent);
             }
-            */
+            
 
             Console.WriteLine("done");
             Console.ReadLine();

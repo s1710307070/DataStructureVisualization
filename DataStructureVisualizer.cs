@@ -12,19 +12,19 @@ namespace DataStructureVisualization
     {
 
         //contains all objects that have already been processed
-        private static Dictionary<Object, int> ProcessedNodes = new Dictionary<Object, int>();
+        private static Dictionary<Object, int> ProcessedNodes;
 
         //contains the names of members which should be displayed with values
-        private static List<String> Whitelist = new List<string>();
+        private static List<String> Whitelist;
 
         //contains the names of memebers which should be ignored while iterating data structure
-        private static List<String> Blacklist = new List<string>();
+        private static List<String> Blacklist;
 
         //streamwriter to insert nodes in the DOT file
         private static StreamWriter SW;
 
         //stringbuilder to insert edges at the end of the DOT file
-        private static StringBuilder SB = new StringBuilder();
+        private static StringBuilder SB;
 
 
         /// <summary>
@@ -45,14 +45,18 @@ namespace DataStructureVisualization
         public static void Visualize(dynamic input)
         {
 
+            ProcessedNodes = new Dictionary<Object, int>();
+            Whitelist = new List<string>();
+            Blacklist = new List<string>();
+            SB = new StringBuilder();
+
             //get dynamic type of the input object
             Type inputType = input.GetType();
 
-            Blacklist.Add("k__BackingField");
-            Blacklist.Add("Item");
-            Blacklist.Add("_value");
-
             SW = new StreamWriter("vis_" + inputType.Name + ".dot");
+
+            Blacklist.Add("k__BackingField");
+            Blacklist.Add("m_value");
 
             SW.WriteLine("//created " + DateTime.Now.ToString("dd/MM/yyyy HH:mm") + " by DataStructureVisualizer (K.D.)\n");
             SW.WriteLine("digraph " + Regex.Replace(inputType.Name.ToString(), "`", "") + " {\n rankdir=TB;\n");
@@ -126,17 +130,14 @@ namespace DataStructureVisualization
             foreach (var entry in Blacklist) if (member.Name.Contains(entry)) return;
 
             destId++;
+            int tempDestination = 0;
 
             //indexed members have to be treated differently
-            if (member.GetValue(input) is IList)
-            {
-                VisualizeIList(input, member, memberType, sourceId, ref destId);
-            }
-            //is not an IList, member.GetValue(input) can be called
-            else
+
+            try
             {
                 //if a node has already been processed, only draw the edge
-                int tempDestination = 0;
+                
                 if (member.GetValue(input) != null && ProcessedNodes.TryGetValue(member.GetValue(input), out tempDestination))
                 {
                     //creating node
@@ -170,9 +171,8 @@ namespace DataStructureVisualization
                     //creating node
                     SW.WriteLine("struct"
                                  + destId
-                                 + " [shape=record style=filled fillcolor=\"0.8 0.1 1.000\", label=\""
+                                 + " [shape=record style=filled fillcolor=\"0.9 0.2 1.000\", label=\""
                                  + member.Name
-                                 + " (null)"
                                  + "\"];");
 
                     //creating edge from the source node
@@ -241,7 +241,7 @@ namespace DataStructureVisualization
                     SW.WriteLine("struct"
                                  + destId
                                  + " [shape=record, label=\""
-                                 + member.Name
+                                 + member.Name + " ***"
                                  + "\"];");
 
                     //creating edge from the source node
@@ -253,7 +253,7 @@ namespace DataStructureVisualization
 
                     //if ToString() is not overriden, go deeper
                     //can be checked by checking what gets returned by ToString()
-                    if (member.ToString().Remove(member.ToString().IndexOf(" ")).Equals(member.GetValue(input).GetType().FullName))
+                    //if (member.ToString().Remove(member.ToString().IndexOf(" ")).Equals(member.GetValue(input).GetType().FullName))
                     {
                         sourceId = destId;
 
@@ -273,10 +273,35 @@ namespace DataStructureVisualization
                         }
 
                     }
-
                 }
 
             }
+            //indexed member
+            catch (TargetParameterCountException exc)
+            {
+                bool displayNode = false;
+
+                foreach (var entry in Blacklist) if (member.Name.Contains(entry)) displayNode = false;
+                if (Whitelist.Contains(member.Name)) displayNode = true;
+                
+                if (displayNode)
+                {
+                    //creating node
+                    SW.WriteLine("struct"
+                                 + destId
+                                 + "[shape = folder, style = filled fillcolor =\"0.4 0.3 1.000\", label=\""
+                                 + member.Name
+                                 + "\"];");
+
+                    //creating edge from the source node
+                    SB.AppendLine("struct"
+                                  + sourceId
+                                  + " -> "
+                                  + "struct"
+                                  + destId);
+                }
+            }
+            
         }
 
 
