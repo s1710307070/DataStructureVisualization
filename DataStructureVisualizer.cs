@@ -26,6 +26,18 @@ namespace DataStructureVisualization
         //stringbuilder to insert edges at the end of the DOT file
         private static StringBuilder SB;
 
+        private static void InitializeHelpers()
+        {
+            ProcessedNodes = new Dictionary<Object, int>();
+            Whitelist = new List<string>();
+            Blacklist = new List<string>();
+            SB = new StringBuilder("");
+        }
+
+        private static bool IsOverridden(this MethodInfo mInfo)
+        {
+            return mInfo.GetBaseDefinition().DeclaringType != mInfo.DeclaringType;
+        }
 
         /// <summary>
         /// overload to display the values of members named in the IEnumerable
@@ -34,6 +46,7 @@ namespace DataStructureVisualization
         /// <param name="whitelistedMembers">names of members whose values will be visualized</param>
         public static void Visualize(dynamic input, IEnumerable<String> whitelistedMembers)
         {
+            InitializeHelpers();
             foreach (var name in whitelistedMembers) Whitelist.Add(name);
             Visualize(input);
         }
@@ -44,11 +57,8 @@ namespace DataStructureVisualization
         /// <param name="input">object whose data structure is being visualized</param>
         public static void Visualize(dynamic input)
         {
-
-            ProcessedNodes = new Dictionary<Object, int>();
-            Whitelist = new List<string>();
-            Blacklist = new List<string>();
-            SB = new StringBuilder();
+            //don't clear static variables
+            if (SB == null) InitializeHelpers();
 
             //get dynamic type of the input object
             Type inputType = input.GetType();
@@ -129,17 +139,34 @@ namespace DataStructureVisualization
             //TODO: include whitelist in this
             foreach (var entry in Blacklist) if (member.Name.Contains(entry)) return;
 
-            destId++;
             int tempDestination = 0;
 
             //indexed members have to be treated differently
 
             try
             {
-                //if a node has already been processed, only draw the edge
-                
-                if (member.GetValue(input) != null && ProcessedNodes.TryGetValue(member.GetValue(input), out tempDestination))
+                if (member.GetValue(input) == null)
                 {
+                    destId++;
+                    //creating node
+                    SW.WriteLine("struct"
+                                 + destId
+                                 + " [shape=record style=filled fillcolor=\"0.9 0.2 1.000\", label=\""
+                                 + member.Name
+                                 + "\"];");
+
+                    //creating edge from the source node
+                    SB.AppendLine("struct"
+                                  + sourceId
+                                  + " -> "
+                                  + "struct"
+                                  + destId);
+
+                    return;
+                }
+                else if (ProcessedNodes.TryGetValue(member.GetValue(input), out tempDestination))
+                {
+                    destId++;
                     //creating node
                     SW.WriteLine("struct"
                                  + destId
@@ -164,14 +191,18 @@ namespace DataStructureVisualization
                 }
 
 
-                if (member.GetValue(input) == null)
+                if (member.GetValue(input) is IEnumerable && !(member.GetValue(input) is String))
                 {
-                    //not sure if this should be shown at all
+                    Console.WriteLine("is IENUM: " + member.Name);
+                    bool displayContent = false;
 
+                    if (Whitelist.Contains(member.Name)) displayContent = true;
+
+                    destId++;
                     //creating node
                     SW.WriteLine("struct"
                                  + destId
-                                 + " [shape=record style=filled fillcolor=\"0.9 0.2 1.000\", label=\""
+                                 + "[shape = folder, style = filled fillcolor =\"0.4 0.3 1.000\", label=\""
                                  + member.Name
                                  + "\"];");
 
@@ -182,8 +213,50 @@ namespace DataStructureVisualization
                                   + "struct"
                                   + destId);
 
-                    return;
+                    if (displayContent)
+                    {
+                        Console.WriteLine("dispalyer content true");
+                        sourceId = destId;
+                        //iterate the IEnumerable and process each entry
+                        foreach (var entry in member.GetValue(input))
+                        {
+
+                            //ToString() is not overriden, iterate properties/fields of entry recursively
+                            if (entry.GetType().GetMethod("ToString").IsOverride())
+                            {
+                                Console.WriteLine("sdfasdf");
+                                destId++;
+                                //creating node
+                                SW.WriteLine("struct"
+                                             + destId
+                                             + "[shape = record, style = filled fillcolor =\"0.2 0.4 1.000\", label=\""
+                                             + entry.ToString()
+                                             + "\"];");
+
+                                //creating edge from the source node
+                                SB.AppendLine("struct"
+                                              + sourceId
+                                              + " -> "
+                                              + "struct"
+                                              + destId);
+
+                            }
+                            else
+                            {
+
+                                //get all properties and call recursive function
+                                foreach (var property in entry.GetType().GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+                                    if (property != null) VisualizeRecursively(entry, property, sourceId, ref destId);
+
+                                //get all fields and call recursive function
+                                foreach (var field in entry.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+                                    if (field != null) VisualizeRecursively(entry, field, sourceId, ref destId);
+                            }
+
+                        }
+                    }
                 }
+
 
 
                 //add to processedNodes
@@ -195,7 +268,7 @@ namespace DataStructureVisualization
 
                 if (Whitelist.Contains(member.Name))
                 {
-
+                    destId++;
                     //creating node
                     SW.WriteLine("struct"
                                  + destId
@@ -237,6 +310,7 @@ namespace DataStructureVisualization
                 //ShowData attribute not set and no indexed member
                 else
                 {
+                    destId++;
                     //creating node
                     SW.WriteLine("struct"
                                  + destId
@@ -279,17 +353,20 @@ namespace DataStructureVisualization
             //indexed member
             catch (TargetParameterCountException exc)
             {
-                bool displayNode = false;
+                Console.WriteLine("in exc");
+                bool displayNode = true;
 
                 foreach (var entry in Blacklist) if (member.Name.Contains(entry)) displayNode = false;
                 if (Whitelist.Contains(member.Name)) displayNode = true;
-                
-                if (displayNode)
+
+                if (displayNode && !(member is String))
                 {
+
+                    destId++;
                     //creating node
                     SW.WriteLine("struct"
                                  + destId
-                                 + "[shape = folder, style = filled fillcolor =\"0.4 0.3 1.000\", label=\""
+                                 + "[shape = folder, style = filled fillcolor =\"0.2 0.3 1.000\", label=\""
                                  + member.Name
                                  + "\"];");
 
@@ -299,9 +376,10 @@ namespace DataStructureVisualization
                                   + " -> "
                                   + "struct"
                                   + destId);
+
                 }
             }
-            
+
         }
 
 
