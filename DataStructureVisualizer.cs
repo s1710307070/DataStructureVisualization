@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -98,7 +99,7 @@ namespace DataStructureVisualization
             }
             //finally
             {
-                SW.WriteLine(SB.ToString() + "}");
+                SW.WriteLine(SB + "}");
                 SW.Flush();
             }
 
@@ -114,32 +115,13 @@ namespace DataStructureVisualization
         /// <param name="destId">current id to identify nodes for visualization</param>
         private static void VisualizeRecursively(dynamic input, dynamic member, int sourceId, ref int destId)
         {
-            //Get information specific to member type and determine type for later
-            String memberType;
-            String memberTypeName;
-
-            //member param is a Property
-            if (Equals("RuntimePropertyInfo", member.GetType().Name))
-            {
-                memberType = "Property";
-                memberTypeName = member.PropertyType.Name;
-            }
-
-            //member param is a Field
-            else if (Equals("RtFieldInfo", member.GetType().Name))
-            {
-                memberType = "Field";
-                memberTypeName = member.FieldType.Name;
-            }
-            //i.e. Methods are not supported
-            else return;
-
             //exclude duplicate information stored in backing fields except for whitelisted member names
             //need to find a stable workaround eventually with Blacklist
             //TODO: include whitelist in this
-            foreach (var entry in Blacklist) if (member.Name.Contains(entry)) return;
-
-            int tempDestination = 0;
+            if (Blacklist.Any(entry => member.Name.Contains(entry)))
+            {
+                return;
+            }
 
             //indexed members have to be treated differently
 
@@ -151,8 +133,8 @@ namespace DataStructureVisualization
                     //creating node
                     SW.WriteLine("struct"
                                  + destId
-                                 + " [shape=record style=filled fillcolor=\"0.9 0.2 1.000\", label=\""
-                                 + member.Name
+                                 + " [shape=record style=filled fillcolor=\"0.8 0.1 1.000\", label=\""
+                                 + member.Name + " (null) "
                                  + "\"];");
 
                     //creating edge from the source node
@@ -164,7 +146,8 @@ namespace DataStructureVisualization
 
                     return;
                 }
-                else if (ProcessedNodes.TryGetValue(member.GetValue(input), out tempDestination))
+
+                if (ProcessedNodes.TryGetValue(member.GetValue(input), out int tempDestination))
                 {
                     destId++;
                     //creating node
@@ -190,46 +173,63 @@ namespace DataStructureVisualization
                     return;
                 }
 
+                //add to processedNodes
+                ProcessedNodes.Add(member.GetValue(input), destId);
 
                 if (member.GetValue(input) is IEnumerable && !(member.GetValue(input) is String))
                 {
                     Console.WriteLine("is IENUM: " + member.Name);
-                    bool displayContent = false;
 
-                    if (Whitelist.Contains(member.Name)) displayContent = true;
-
-                    destId++;
-                    //creating node
-                    SW.WriteLine("struct"
-                                 + destId
-                                 + "[shape = folder, style = filled fillcolor =\"0.4 0.3 1.000\", label=\""
-                                 + member.Name
-                                 + "\"];");
-
-                    //creating edge from the source node
-                    SB.AppendLine("struct"
-                                  + sourceId
-                                  + " -> "
-                                  + "struct"
-                                  + destId);
-
-                    if (displayContent)
+                    if (!Whitelist.Contains(member.Name))
                     {
-                        Console.WriteLine("dispalyer content true");
+                        destId++;
+                        //creating node
+                        SW.WriteLine("struct"
+                                     + destId
+                                     + "[shape = folder, style = filled fillcolor =\"0.0 0.0 1.000\", label=\""
+                                     + member.Name
+                                     + "\"];");
+
+                        //creating edge from the source node
+                        SB.AppendLine("struct"
+                                      + sourceId
+                                      + " -> "
+                                      + "struct"
+                                      + destId);
+                    }
+                    else
+                    {
+                        destId++;
+                        //creating node
+                        SW.WriteLine("struct"
+                                     + destId
+                                     + "[shape = folder, style = filled fillcolor =\"0.2 0.2 1.000\", label=\""
+                                     + member.Name
+                                     + "\"];");
+
+                        //creating edge from the source node
+                        SB.AppendLine("struct"
+                                      + sourceId
+                                      + " -> "
+                                      + "struct"
+                                      + destId);
+
                         sourceId = destId;
+
                         //iterate the IEnumerable and process each entry
                         foreach (var entry in member.GetValue(input))
                         {
 
                             //ToString() is not overriden, iterate properties/fields of entry recursively
-                            if (entry.GetType().GetMethod("ToString").IsOverride())
+                            //TODO: better to find a solution that directly checks, need to find a fix for ambiguous exception
+                            //MethodInfo methodInfo = entry.GetType().GetMethod("ToString").IsOverridden());
+                            if (entry is string || entry is System.ValueType)
                             {
-                                Console.WriteLine("sdfasdf");
                                 destId++;
                                 //creating node
                                 SW.WriteLine("struct"
                                              + destId
-                                             + "[shape = record, style = filled fillcolor =\"0.2 0.4 1.000\", label=\""
+                                             + "[shape = record, style = filled fillcolor =\"0.2 0.2 1.000\", label=\""
                                              + entry.ToString()
                                              + "\"];");
 
@@ -243,6 +243,9 @@ namespace DataStructureVisualization
                             }
                             else
                             {
+                                //TODO: only show the default members if they are specifically named
+                                return;
+
 
                                 //get all properties and call recursive function
                                 foreach (var property in entry.GetType().GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
@@ -255,12 +258,10 @@ namespace DataStructureVisualization
 
                         }
                     }
+
+                    return;
                 }
 
-
-
-                //add to processedNodes
-                ProcessedNodes.Add(member.GetValue(input), destId);
 
                 //visualizes this member's value if "ShowData" is set (non-indexed members)
                 //currently not supporting the Attribute ShowData version
@@ -285,6 +286,7 @@ namespace DataStructureVisualization
 
                     //when ToString() is not overriden it returns the .GetType().FullName and the name if possible
                     //cut away the name and check if ToString() has been overriden
+                    //TODO: same as above, find solution to check if ToString() has been overridden
                     if (member.ToString().Remove(member.ToString().IndexOf(" ")).Equals(member.GetValue(input).GetType().FullName))
                     {
                         //get the actual object behind the member
@@ -315,7 +317,7 @@ namespace DataStructureVisualization
                     SW.WriteLine("struct"
                                  + destId
                                  + " [shape=record, label=\""
-                                 + member.Name + " ***"
+                                 + member.Name
                                  + "\"];");
 
                     //creating edge from the source node
@@ -379,9 +381,9 @@ namespace DataStructureVisualization
 
                 }
             }
-
         }
 
+        /*
 
         /// <summary>
         /// visualizes indexed members and calls VisualizeRecursively for each handled member
@@ -496,5 +498,6 @@ namespace DataStructureVisualization
             }
         }
 
+    */
     }
 }
