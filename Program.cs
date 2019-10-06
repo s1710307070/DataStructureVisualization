@@ -96,9 +96,12 @@ namespace DataStructureVisualization
                 Random rnd2 = new Random();
                 for (int i = 0; i < 2; i++) testSkipList.Add(rnd2.Next(1, 10000));
 
-                List<String> testList4 = new List<String>() { "value" };
+                List<String> testList4 = new List<String>() {};
 
-                DataStructureVisualizer.Visualize(testSkipList, testList4);
+                //TODO: fix so that blacklist gets checked at every point in the program
+                List<String> testList41 = new List<string>() { "Value", "value", "Next", "next"};
+
+                DataStructureVisualizer.Visualize(testSkipList, testList4, testList41);
             }
             
             //test with Student object

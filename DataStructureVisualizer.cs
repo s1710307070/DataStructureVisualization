@@ -38,7 +38,7 @@ namespace DataStructureVisualization
 
         /// <summary>
         /// TODO: not finalized
-        /// check if an object has an overridden ToString() Method
+        /// Check if an object has an overridden ToString method
         /// </summary>
         /// <param name="obj"></param>
         /// <param name="methodName"></param>
@@ -63,17 +63,10 @@ namespace DataStructureVisualization
         }
 
         /// <summary>
-        /// Visualize data structure of object 'input'
-        /// </summary>
-        /// <param name="input">object to be visualized</param>
-        public static void Visualize(dynamic input)
-        {
-            List<string> emptyList = new List<string>();
-            Visualize(input, emptyList);
-        }
-
-        /// <summary>
-        /// Visualize data structure of object 'input' and display values of members named in second param
+        /// Visualize data structure of parameter. Include all members recursively except
+        /// for certain properties and backing fields obscuring the relevant information
+        /// Does not show values of members in the data structure except for properties
+        /// specifically named in the second parameter
         /// </summary>
         /// <param name="input">object to be visualized</param>
         /// <param name="whitelistedMembers">named members with displayed dat</param>
@@ -81,7 +74,35 @@ namespace DataStructureVisualization
         {
             InitializeHelpers();
             foreach (var entry in whitelistedMembers) Whitelist.Add(entry);
+            Visualize(input);
+        }
 
+        /// <summary>
+        /// Visualize data structure of parameter. Include all members recursively except
+        /// for certain properties and backing fields obscuring the relevant information
+        /// Does not show values of members in the data structure except for properties
+        /// specifically named in the second parameter. Blocks and does not include members
+        /// with a name included in the second parameter
+        /// </summary>
+        /// <param name="input">object to be visualized</param>
+        /// <param name="whitelistedMembers">named members with displayed dat</param>
+        public static void Visualize(dynamic input, IEnumerable<string> whitelistedMembers, IEnumerable<string> blacklistedMembers)
+        {
+            InitializeHelpers();
+            foreach (var entry in whitelistedMembers) Whitelist.Add(entry);
+            foreach (var entry in blacklistedMembers) Blacklist.Add(entry);
+            Visualize(input);
+        }
+
+        /// <summary>
+        /// Visualize data structure of parameter. Include all members recursively except
+        /// for certain properties and backing fields obscuring the relevant information
+        /// Does not show values of members in the data structure
+        /// </summary>
+        /// <param name="input">object to be visualized</param>
+        public static void Visualize(dynamic input)
+        {
+            if (Whitelist.Count == 0) InitializeHelpers();
             //get dynamic type of the input object
             Type inputType = input.GetType();
 
