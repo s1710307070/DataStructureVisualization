@@ -11,19 +11,19 @@ namespace DataStructureVisualization
             //several different data structures for testing
 
             //binary tree
-            /*
+            
             {
                 BinaryTree testTree = new BinaryTree();
                 Random rnd = new Random();
                 for (int i = 0; i < 5; i++) testTree.Insert(rnd.Next(1, 10000));
                 //testTree.DisplayTree();
 
-                //List<String> testList1 = new List<String>() {"values"};
-                //DataStructureVisualizer.Visualize(testTree);
+                List<String> testList1 = new List<String>() {"Data"};
+                DataStructureVisualizer.Visualize(testTree, testList1);
                 //DataStructureVisualizer.Visualize(testTree, testList1);
             }
 
-
+            
             //nodes with data members and left/right references
             {
                 Node testNode1 = new Node(1);
@@ -54,12 +54,12 @@ namespace DataStructureVisualization
 
                 //DataStructureVisualizer.Visualize(testDoubleList);
                 List<String> testList3 = new List<String>() { "Title" };
-                //DataStructureVisualizer.Visualize(testDoubleList, testList3);
-                DataStructureVisualizer.Visualize(testDoubleList);
+                DataStructureVisualizer.Visualize(testDoubleList, testList3);
+                //DataStructureVisualizer.Visualize(testDoubleList);
 
             }
             
-
+            
             //tests with list of nodes as member
             {
                 Node testNode5 = new Node(0);
@@ -75,6 +75,7 @@ namespace DataStructureVisualization
                 DataStructureVisualizer.Visualize(testNode5);
 
             }
+
 
             //tests with queue from collections
             {
@@ -99,7 +100,7 @@ namespace DataStructureVisualization
 
                 DataStructureVisualizer.Visualize(testSkipList, testList4);
             }
-            */
+            
             //test with Student object
             {
                 /*
@@ -112,16 +113,17 @@ namespace DataStructureVisualization
                 DataStructureVisualizer.IsOverridden(i, "ToString");
                 char c = 'x';
                 DataStructureVisualizer.IsOverridden(c, "ToString");
-                */
-
+                
+            */
                 Student testStudent = new Student();
                 StringWrapper[] temp = new StringWrapper[2];
                 temp[0] = new StringWrapper("WS1");
                 temp[1] = new StringWrapper("WS2");
                 testStudent.wrappedStrings = temp;
                 testStudent.wrappedString = new StringWrapper("WS§");
+                testStudent.brother = new Student[]{new Student()};
 
-                List<String> testList5 = new List<String>() { "kidsList", "kids", "kidsAges", "wrappedStrings", "wrappedString", "Info" };
+                List<String> testList5 = new List<String>() {"brother", "content", "kidsList", "kids", "wrappedStrings", "wrappedString", "Info" };
 
                 DataStructureVisualizer.Visualize(testStudent, testList5);
             }

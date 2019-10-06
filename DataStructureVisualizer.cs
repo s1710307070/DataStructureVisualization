@@ -36,32 +36,51 @@ namespace DataStructureVisualization
             SB = new StringBuilder("");
         }
 
-
+        /// <summary>
+        /// TODO: not finalized
+        /// check if an object has an overridden ToString() Method
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <param name="methodName"></param>
+        /// <returns></returns>
         public static bool IsOverridden(dynamic obj, string methodName)
         {
-                return !(obj.ToString().Equals(obj.GetType().FullName));
+            /*
+            Console.WriteLine("-----");
+            Console.WriteLine(obj.ToString());
+            Console.WriteLine(obj.GetType().FullName);
+            */
+
+            if (obj.ToString().Contains("`"))
+            {
+                //Console.WriteLine(obj.ToString().Remove(obj.ToString().IndexOf("`")));
+
+                return !obj.ToString().Remove(obj.ToString().IndexOf("`"))
+                    .Equals(obj.GetType().FullName.Remove(obj.GetType().FullName.IndexOf("`")));
+            }
+
+            return !(obj.ToString().Equals(obj.GetType().FullName));
         }
 
         /// <summary>
-        /// overload to display the values of members named in the IEnumerable
+        /// Visualize data structure of object 'input'
         /// </summary>
-        /// <param name="input">object whose data structure is being visualized</param>
-        /// <param name="whitelistedMembers">names of members whose values will be visualized</param>
+        /// <param name="input">object to be visualized</param>
+        public static void Visualize(dynamic input)
+        {
+            List<string> emptyList = new List<string>();
+            Visualize(input, emptyList);
+        }
+
+        /// <summary>
+        /// Visualize data structure of object 'input' and display values of members named in second param
+        /// </summary>
+        /// <param name="input">object to be visualized</param>
+        /// <param name="whitelistedMembers">named members with displayed dat</param>
         public static void Visualize(dynamic input, IEnumerable<string> whitelistedMembers)
         {
             InitializeHelpers();
-            foreach (var name in whitelistedMembers) Whitelist.Add(name);
-            Visualize(input);
-        }
-
-        /// <summary>
-        /// generates a DOT file to display the data structure and values of members of the passed object 'input'
-        /// </summary>
-        /// <param name="input">object whose data structure is being visualized</param>
-        public static void Visualize(dynamic input)
-        {
-            //don't clear static variables
-            if (SB == null) InitializeHelpers();
+            foreach (var entry in whitelistedMembers) Whitelist.Add(entry);
 
             //get dynamic type of the input object
             Type inputType = input.GetType();
@@ -70,6 +89,10 @@ namespace DataStructureVisualization
 
             Blacklist.Add("k__BackingField");
             Blacklist.Add("m_value");
+            Blacklist.Add("_firstChar");
+            foreach (var x in typeof(String).GetProperties()) Blacklist.Add(x.Name);
+            foreach (var x in typeof(String).GetFields()) Blacklist.Add(x.Name);
+
 
             SW.WriteLine("//created " + DateTime.Now.ToString("dd/MM/yyyy HH:mm") + " by DataStructureVisualizer (K.D.)\n");
             SW.WriteLine("digraph " + Regex.Replace(inputType.Name.ToString(), "`", "") + " {\n rankdir=TB;\n");
@@ -81,9 +104,7 @@ namespace DataStructureVisualization
             SW.WriteLine("struct" + destId + " [shape=box3d, style=filled fillcolor=\"0.6 0.3 1.000\", label=\"" + inputType.Name + "\"];");
             ProcessedNodes.Add(input, destId);
 
-            //TODO: exception handling to make sure the DOT file gets closed appropriately
-
-            //try
+            try
             {
                 //get all properties and call recursive function
                 foreach (var property in inputType.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
@@ -94,12 +115,11 @@ namespace DataStructureVisualization
                     if (field != null) VisualizeRecursively(input, field, sourceId, ref destId);
 
             }
-            //catch (Exception e)
+            catch (Exception e)
             {
-                //Console.WriteLine(e.Message);
-                //throw e;
+                Console.WriteLine(e.Message);
             }
-            //finally
+            finally
             {
                 SW.WriteLine(SB + "}");
                 SW.Flush();
@@ -118,19 +138,19 @@ namespace DataStructureVisualization
         private static void VisualizeRecursively(dynamic input, dynamic member, int sourceId, ref int destId)
         {
             //exclude duplicate information stored in backing fields except for whitelisted member names
-            //need to find a stable workaround eventually with Blacklist
-            //TODO: include whitelist in this
-            if (Blacklist.Any(entry => member.Name.Contains(entry)))
+            if (Blacklist.Any(entry => member.Name.Contains(entry)) && !Whitelist.Contains(member.Name))
             {
+                Console.WriteLine("excluded member " + member.Name);
                 return;
             }
 
-            //indexed members have to be treated differently
 
             try
             {
+                //member is null, exclude these eventually
                 if (member.GetValue(input) == null)
                 {
+                    /*
                     destId++;
                     //creating node
                     SW.WriteLine("struct"
@@ -146,9 +166,11 @@ namespace DataStructureVisualization
                                   + "struct"
                                   + destId);
 
+                    */
                     return;
                 }
 
+                //obj has already been processed, create edge backwards
                 if (ProcessedNodes.TryGetValue(member.GetValue(input), out int tempDestination))
                 {
                     destId++;
@@ -176,11 +198,11 @@ namespace DataStructureVisualization
                 }
 
                 //add to processedNodes
-                ProcessedNodes.Add(member.GetValue(input), destId);
+                ProcessedNodes.Add(member.GetValue(input), destId + 1);
 
-                if (member.GetValue(input) is IEnumerable && !(member.GetValue(input) is string))
+                //handle Enumerables and avoid splitting up String into chars etc
+                if (member.GetValue(input) is IEnumerable && !IsOverridden(member.GetValue(input), "ToString"))
                 {
-                    Console.WriteLine("is IENUM: " + member.Name);
 
                     if (!Whitelist.Contains(member.Name))
                     {
@@ -221,11 +243,7 @@ namespace DataStructureVisualization
                         //iterate the IEnumerable and process each entry
                         foreach (var entry in member.GetValue(input))
                         {
-
-                            //ToString() is not overriden, iterate properties/fields of entry recursively
-                            //TODO: better to find a solution that directly checks, need to find a fix for ambiguous exception
-                            //MethodInfo methodInfo = entry.GetType().GetMethod("ToString").IsOverridden());
-                            //if (entry is String || entry is System.ValueType)
+                            //ToString() is overridden, display values
                             if (IsOverridden(entry, "ToString"))
                             {
                                 destId++;
@@ -244,11 +262,9 @@ namespace DataStructureVisualization
                                               + destId);
 
                             }
+                            //ToString() is not overriden, iterate properties/fields of entry recursively
                             else
                             {
-                                //TODO: only show the default members if they are specifically named
-                                return;
-
 
                                 //get all properties and call recursive function
                                 foreach (var property in entry.GetType().GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
@@ -265,54 +281,65 @@ namespace DataStructureVisualization
                     return;
                 }
 
-
-                //visualizes this member's value if "ShowData" is set (non-indexed members)
-                //currently not supporting the Attribute ShowData version
-                //if (Attribute.IsDefined(member, typeof(ShowData)) || Whitelist.Contains(memberName))
-
+                //display and iterate whitelisted members
                 if (Whitelist.Contains(member.Name))
                 {
-                    destId++;
-                    //creating node
-                    SW.WriteLine("struct"
-                                 + destId
-                                 + " [shape=record style=filled fillcolor=\"0.2 0.2 1.000\", label=\""
-                                 + member.Name
-                                 + "\"];");
-
-                    //creating edge
-                    SB.AppendLine("struct"
-                                  + sourceId
-                                  + " -> "
-                                  + "struct"
-                                  + destId);
-
-                    //when ToString() is not overriden it returns the .GetType().FullName and the name if possible
-                    //cut away the name and check if ToString() has been overriden
-                    //TODO: same as above, find solution to check if ToString() has been overridden
-                    if (IsOverridden(member, "ToString"))
+                    if (IsOverridden(member.GetValue(input), "ToString"))
                     {
-                        //get the actual object behind the member
-                        var memberObject = member.GetValue(input);
+                        destId++;
+                        //creating node
+                        SW.WriteLine("struct"
+                                     + destId
+                                     + " [shape=record style=filled fillcolor=\"0.2 0.2 1.000\", label=\""
+                                     + member.Name
+                                     + " | "
+                                     + member.GetValue(input)
+                                     + "\"];");
 
-                        if (memberObject != null && !(memberObject is string))
-                        {
-                            sourceId = destId;
+                        //creating edge
+                        SB.AppendLine("struct"
+                                      + sourceId
+                                      + " -> "
+                                      + "struct"
+                                      + destId);
+                    }
+                    else
+                    {
+                        destId++;
+                        //creating node
+                        SW.WriteLine("struct"
+                                     + destId
+                                     + " [shape=record style=filled fillcolor=\"0.2 0.2 1.000\", label=\""
+                                     + member.Name
+                                     + "\"];");
 
-                            //get all properties and call recursive function
-                            foreach (var property in memberObject.GetType().GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
-                                if (property != null) VisualizeRecursively(memberObject, property, sourceId, ref destId);
-
-                            //get all fields and call recursive function
-                            foreach (var field in memberObject.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
-                                if (field != null) VisualizeRecursively(memberObject, field, sourceId, ref destId);
-
-                        }
-
+                        //creating edge
+                        SB.AppendLine("struct"
+                                      + sourceId
+                                      + " -> "
+                                      + "struct"
+                                      + destId);
                     }
 
+                    //get the actual object behind the member
+                    var memberObject = member.GetValue(input);
+
+                    if (memberObject != null)
+                    {
+                        sourceId = destId;
+
+                        //get all properties and call recursive function
+                        foreach (var property in memberObject.GetType().GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+                            if (property != null) VisualizeRecursively(memberObject, property, sourceId, ref destId);
+
+                        //get all fields and call recursive function
+                        foreach (var field in memberObject.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+                            if (field != null) VisualizeRecursively(memberObject, field, sourceId, ref destId);
+
+                    }
                 }
-                //ShowData attribute not set and no indexed member
+
+                //not whitelisted members
                 else
                 {
                     destId++;
@@ -330,177 +357,36 @@ namespace DataStructureVisualization
                                   + "struct"
                                   + destId);
 
-                    //if ToString() is not overriden, go deeper
-                    //can be checked by checking what gets returned by ToString()
-                    //if (member.ToString().Remove(member.ToString().IndexOf(" ")).Equals(member.GetValue(input).GetType().FullName))
+
+                    sourceId = destId;
+
+                    //get the actual object behind the member
+                    var memberObject = member.GetValue(input);
+
+                    //TODO: figure out which data types not to inspect further (String etc)
+                    //&& !(IsOverridden(memberObject, "ToString"))
+
+                    //only go until the object can be displayed
+                    if (memberObject != null )
                     {
-                        sourceId = destId;
+                        //get all properties and call recursive function
+                        foreach (var property in memberObject.GetType().GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+                            if (property != null) VisualizeRecursively(memberObject, property, sourceId, ref destId);
 
-                        //get the actual object behind the member
-                        var memberObject = member.GetValue(input);
-
-                        //TODO: strings would get split into characters, need to find solution for such cases
-                        if (memberObject != null && !(memberObject is string))
-                        {
-                            //get all properties and call recursive function
-                            foreach (var property in memberObject.GetType().GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
-                                if (property != null) VisualizeRecursively(memberObject, property, sourceId, ref destId);
-
-                            //get all fields and call recursive function
-                            foreach (var field in memberObject.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
-                                if (field != null) VisualizeRecursively(memberObject, field, sourceId, ref destId);
-                        }
-
+                        //get all fields and call recursive function
+                        foreach (var field in memberObject.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+                            if (field != null) VisualizeRecursively(memberObject, field, sourceId, ref destId);
                     }
+
                 }
 
             }
             //indexed member
             catch (TargetParameterCountException exc)
             {
-                Console.WriteLine("in exc");
-                bool displayNode = true;
-
-                foreach (var entry in Blacklist) if (member.Name.Contains(entry)) displayNode = false;
-                if (Whitelist.Contains(member.Name)) displayNode = true;
-
-                if (displayNode && !(member is string))
-                {
-
-                    destId++;
-                    //creating node
-                    SW.WriteLine("struct"
-                                 + destId
-                                 + "[shape = folder, style = filled fillcolor =\"0.2 0.3 1.000\", label=\""
-                                 + member.Name
-                                 + "\"];");
-
-                    //creating edge from the source node
-                    SB.AppendLine("struct"
-                                  + sourceId
-                                  + " -> "
-                                  + "struct"
-                                  + destId);
-
-                }
+                Console.WriteLine("in exception for member " + member.Name);
             }
         }
 
-        /*
-
-        /// <summary>
-        /// visualizes indexed members and calls VisualizeRecursively for each handled member
-        /// i.e. Array or List<>
-        /// </summary>
-        /// <param name="input">object to which the member belongs</param>
-        /// <param name="member">member to be handled for this method call</param>
-        /// <param name="memberType">type of member easier to determine beforehand</param>
-        /// <param name="sourceId">source node to draw the edge from</param>
-        /// <param name="destId">current id to identify nodes for visualization</param>
-        private static void VisualizeIList(dynamic input, dynamic member, string memberType, int sourceId, ref int destId)
-        {
-            //exclude duplicate information stored in backing fields except for whitelisted member names
-            //need to find a stable workaround eventually with Blacklist
-            //TODO: include whitelist in this
-            foreach (var entry in Blacklist) if (member.Name.Contains(entry)) return;
-
-            Type objType;
-            Type itemType = typeof(string);
-            if (memberType.Equals("Field")) objType = member.FieldType;
-            else if (memberType.Equals("Property")) objType = member.PropertyType;
-            else return;
-
-            int containerLength = 0;
-            if (objType.IsArray)
-                containerLength = member.GetValue(input).Length;
-            else
-                containerLength = member.GetValue(input).Count;
-
-            //itemType not important as of this version
-            //if (member.GetValue(input)[containerLength] != null) itemType = member.GetValue(input)[containerLength - 1].GetType();
-
-
-            //if attribute is not set, only display length/count of elements and name
-            //not currently supporting the ShowData attribute, only named in Whitelist
-            //if (!Attribute.IsDefined(member, typeof(ShowData)) && !Whitelist.Contains(member.Name))
-
-            //member not named in Whitelist, display only length of IList and do not go deeper
-            if (!Whitelist.Contains(member.Name))
-            {
-                //creating node
-                SW.Write("struct" + destId + " [shape=record, label=\"");
-                SW.Write(""
-                         + member.Name
-                         + " | Length: "
-                         + containerLength);
-                SW.Write("\"];\n");
-
-                //creating edge
-                SB.AppendLine("struct"
-                              + sourceId
-                              + " -> "
-                              + "struct"
-                              + destId);
-            }
-
-            //member named in Whitelist, create node for IList and call VisualizeRecursively for each item in IList
-            else
-            {
-                //creating node
-                SW.Write("struct"
-                         + destId
-                         + " [shape=record style=filled fillcolor=\"0.2 0.2 1.000\", label=\""
-                         + member.Name
-                         + "\"];\n");
-
-                //creating edge
-                SB.AppendLine("struct"
-                              + sourceId
-                              + " -> "
-                              + "struct"
-                              + destId);
-
-                //for each item the source node 'IList' needs to be used to draw edge
-                int enumId = destId;
-
-                foreach (var entry in member.GetValue(input))
-                {
-                    sourceId = destId;
-                    //if ToString() is overridden create a node displaying the value with ToString(), do not go deeper
-                    //can be checked by checking what gets returned by ToString()
-                    if (!entry.ToString().Remove(entry.ToString().IndexOf(" ")).Equals(entry.GetValue(input).GetType().FullName))
-                    {
-                        destId++;
-                        //create node
-                        SW.Write("struct"
-                                 + destId
-                                 + " [shape=record, label=\""
-                                 + entry
-                                 + "\"];\n");
-
-                        //creating edge
-                        SB.AppendLine("struct"
-                                      + enumId
-                                      + " -> "
-                                      + "struct"
-                                      + sourceId);
-
-                    }
-                    else
-                    {
-                        //get all properties and call recursive function
-                        foreach (var property in entry.GetType().GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
-                            if (property != null) VisualizeRecursively(entry, property, sourceId, ref destId);
-
-                        //get all fields and call recursive function
-                        foreach (var field in entry.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
-                            if (field != null) VisualizeRecursively(entry, field, sourceId, ref destId);
-                    }
-
-                }
-            }
-        }
-
-    */
     }
 }

@@ -203,6 +203,8 @@ namespace DataStructureVisualization
             Console.WriteLine("Age: " + Age);
         }
 
+        public Student[] brother;
+
         //[ShowData]
         public StringWrapper[] wrappedStrings;
         public StringWrapper wrappedString;
