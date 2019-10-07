@@ -28,14 +28,6 @@ namespace DataStructureVisualization
         //stringbuilder to insert edges at the end of the DOT file
         private static StringBuilder SB;
 
-        private static void InitializeHelpers()
-        {
-            ProcessedNodes = new Dictionary<object, int>();
-            Whitelist = new List<string>();
-            Blacklist = new List<string>();
-            SB = new StringBuilder("");
-        }
-
         /// <summary>
         /// TODO: not finalized
         /// Check if an object has an overridden ToString method
@@ -62,6 +54,27 @@ namespace DataStructureVisualization
             return !(obj.ToString().Equals(obj.GetType().FullName));
         }
 
+        private static void InitializeMembers()
+        {
+            ProcessedNodes = new Dictionary<object, int>();
+            Whitelist = new List<string>();
+            Blacklist = new List<string>();
+            SB = new StringBuilder();
+        }
+
+        /// <summary>
+        /// Visualize data structure of parameter. Include all members recursively except
+        /// for certain properties and backing fields obscuring the relevant information
+        /// Does not show values of members in the data structure
+        /// </summary>
+        /// <param name="input">object to be visualized</param>
+        public static void Visualize(dynamic input)
+        {
+            List<string> emptyWhitelist = new List<string>();
+            List<string> emptyBlacklist = new List<string>();
+            Visualize(input, emptyWhitelist, emptyBlacklist);
+        }
+
         /// <summary>
         /// Visualize data structure of parameter. Include all members recursively except
         /// for certain properties and backing fields obscuring the relevant information
@@ -72,10 +85,11 @@ namespace DataStructureVisualization
         /// <param name="whitelistedMembers">named members with displayed dat</param>
         public static void Visualize(dynamic input, IEnumerable<string> whitelistedMembers)
         {
-            InitializeHelpers();
-            foreach (var entry in whitelistedMembers) Whitelist.Add(entry);
-            Visualize(input);
+            List<string> emptyBlacklist = new List<string>();
+            Visualize(input, whitelistedMembers, emptyBlacklist);
         }
+
+
 
         /// <summary>
         /// Visualize data structure of parameter. Include all members recursively except
@@ -88,31 +102,22 @@ namespace DataStructureVisualization
         /// <param name="whitelistedMembers">named members with displayed dat</param>
         public static void Visualize(dynamic input, IEnumerable<string> whitelistedMembers, IEnumerable<string> blacklistedMembers)
         {
-            InitializeHelpers();
-            foreach (var entry in whitelistedMembers) Whitelist.Add(entry);
-            foreach (var entry in blacklistedMembers) Blacklist.Add(entry);
-            Visualize(input);
-        }
+            InitializeMembers();
 
-        /// <summary>
-        /// Visualize data structure of parameter. Include all members recursively except
-        /// for certain properties and backing fields obscuring the relevant information
-        /// Does not show values of members in the data structure
-        /// </summary>
-        /// <param name="input">object to be visualized</param>
-        public static void Visualize(dynamic input)
-        {
-            if (Whitelist.Count == 0) InitializeHelpers();
             //get dynamic type of the input object
             Type inputType = input.GetType();
 
             SW = new StreamWriter("vis_" + inputType.Name + ".dot");
+
+            foreach (var x in whitelistedMembers) Whitelist.Add(x);
+            foreach (var x in blacklistedMembers) Blacklist.Add(x);
 
             Blacklist.Add("k__BackingField");
             Blacklist.Add("m_value");
             Blacklist.Add("_firstChar");
             foreach (var x in typeof(String).GetProperties()) Blacklist.Add(x.Name);
             foreach (var x in typeof(String).GetFields()) Blacklist.Add(x.Name);
+
 
 
             SW.WriteLine("//created " + DateTime.Now.ToString("dd/MM/yyyy HH:mm") + " by DataStructureVisualizer (K.D.)\n");
@@ -144,6 +149,7 @@ namespace DataStructureVisualization
             {
                 SW.WriteLine(SB + "}");
                 SW.Flush();
+                SW.Close();
             }
 
         }
@@ -405,7 +411,7 @@ namespace DataStructureVisualization
             //indexed member
             catch (TargetParameterCountException exc)
             {
-                Console.WriteLine("in exception for member " + member.Name);
+                Console.WriteLine(exc.Message);
             }
         }
 

@@ -11,7 +11,7 @@ namespace DataStructureVisualization
             //several different data structures for testing
 
             //binary tree
-            
+            /*
             {
                 BinaryTree testTree = new BinaryTree();
                 Random rnd = new Random();
@@ -87,7 +87,7 @@ namespace DataStructureVisualization
 
                 DataStructureVisualizer.Visualize(testQueue, new List<String>() { "_array", "_item" });
             }
-
+            */
             //tests with skip list implementation 
             {
 
@@ -96,14 +96,16 @@ namespace DataStructureVisualization
                 Random rnd2 = new Random();
                 for (int i = 0; i < 2; i++) testSkipList.Add(rnd2.Next(1, 10000));
 
-                List<String> testList4 = new List<String>() {};
+                List<String> testList4 = new List<String>() {"Levels"};
 
                 //TODO: fix so that blacklist gets checked at every point in the program
-                List<String> testList41 = new List<string>() { "Value", "value", "Next", "next"};
+                List<String> testList41 = new List<string>() { "Value", "value", "Next", "next" };
 
+                //DataStructureVisualizer.Visualize(testSkipList);
+                //DataStructureVisualizer.Visualize(testSkipList, testList4);
                 DataStructureVisualizer.Visualize(testSkipList, testList4, testList41);
             }
-            
+
             //test with Student object
             {
                 /*
@@ -118,22 +120,24 @@ namespace DataStructureVisualization
                 DataStructureVisualizer.IsOverridden(c, "ToString");
                 
             */
-                Student testStudent = new Student();
-                StringWrapper[] temp = new StringWrapper[2];
-                temp[0] = new StringWrapper("WS1");
-                temp[1] = new StringWrapper("WS2");
-                testStudent.wrappedStrings = temp;
-                testStudent.wrappedString = new StringWrapper("WS§");
-                testStudent.brother = new Student[]{new Student()};
+                /*
+                    Student testStudent = new Student();
+                    StringWrapper[] temp = new StringWrapper[2];
+                    temp[0] = new StringWrapper("WS1");
+                    temp[1] = new StringWrapper("WS2");
+                    testStudent.wrappedStrings = temp;
+                    testStudent.wrappedString = new StringWrapper("WS§");
+                    testStudent.brother = new Student[]{new Student()};
 
-                List<String> testList5 = new List<String>() {"brother", "content", "kidsList", "kids", "wrappedStrings", "wrappedString", "Info" };
+                    List<String> testList5 = new List<String>() {"brother", "content", "kidsList", "kids", "wrappedStrings", "wrappedString", "Info" };
 
-                DataStructureVisualizer.Visualize(testStudent, testList5);
+                    DataStructureVisualizer.Visualize(testStudent, testList5);
+                }
+
+                */
+                Console.WriteLine("done");
+                Console.ReadLine();
             }
-            
-
-            Console.WriteLine("done");
-            Console.ReadLine();
         }
     }
 }
