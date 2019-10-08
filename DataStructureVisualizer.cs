@@ -10,17 +10,15 @@ using System.Text.RegularExpressions;
 namespace DataStructureVisualization
 {
     /// <summary>
-    /// DataStructureVisualizer contains a Method 'Visualize' which recursively iterates the 
+    /// DataStructureVisualizer contains a Method 'Visualize' which recurses the 
     /// data structure of an object and creates a DOT file containing graph description language
-    /// which can be visualized with graphviz (graphviz.org).
-    /// Overloads of 'Visualize()' let your control what values and members will be included
-    /// in the result file. 
+    /// which can be visualized with graphviz (graphviz.org). Visualization can be influenced by 
+    /// passing names of members which will be displayed with value or be ignored while recursing;
     /// ----------------------------
     /// ###Created by David Kastner
     /// </summary>
     static class DataStructureVisualizer
     {
-
         //contains all objects that have already been processed
         private static Dictionary<Object, int> ProcessedNodes;
 
@@ -30,10 +28,10 @@ namespace DataStructureVisualization
         //contains the names of memebers which should be ignored while iterating data structure
         private static List<string> Blacklist;
 
-        //streamwriter to insert nodes in the DOT file
+        //streamwriter to create nodes in the DOT file
         private static StreamWriter SW;
 
-        //stringbuilder to insert edges at the end of the DOT file
+        //stringbuilder to create edges at the end of the DOT file
         private static StringBuilder SB;
 
         /// <summary>
@@ -53,42 +51,6 @@ namespace DataStructureVisualization
             return !(obj.ToString().Equals(obj.GetType().FullName));
         }
 
-        private static void InitializeMembers()
-        {
-            ProcessedNodes = new Dictionary<object, int>();
-            Whitelist = new List<string>();
-            Blacklist = new List<string>();
-            SB = new StringBuilder();
-        }
-
-        /// <summary>
-        /// Visualize data structure of 'input'. Include all members recursively except
-        /// for certain properties and backing fields obscuring the relevant information.
-        /// Does not show values of members in the data structure.
-        /// </summary>
-        /// <param name="input">object to be visualized</param>
-        public static void Visualize(dynamic input)
-        {
-            List<string> emptyWhitelist = new List<string>();
-            List<string> emptyBlacklist = new List<string>();
-            Visualize(input, emptyWhitelist, emptyBlacklist);
-        }
-
-        /// <summary>
-        /// Visualize data structure of 'input'. Include all members recursively except
-        /// for certain properties and backing fields obscuring the relevant information.
-        /// Does not show values of members in the data structure except for those
-        /// specifically named (case sensitive) in 'whitelistedMembers.
-        /// </summary>
-        /// <param name="input">object to be visualized</param>
-        /// <param name="whitelistedMembers">members to display values</param>
-        public static void Visualize(dynamic input, IEnumerable<string> whitelistedMembers)
-        {
-            List<string> emptyBlacklist = new List<string>();
-            Visualize(input, whitelistedMembers, emptyBlacklist);
-        }
-
-
         /// <summary>
         /// Visualize data structure of 'input'. Include all members recursively except
         /// for certain properties and backing fields obscuring the relevant information.
@@ -99,11 +61,22 @@ namespace DataStructureVisualization
         /// <param name="input">object to be visualized</param>
         /// <param name="whitelistedMembers">members to display values</param>
         /// <param name="blacklistedMembers">members to be ignored</param>
-        public static void Visualize(dynamic input, IEnumerable<string> whitelistedMembers, IEnumerable<string> blacklistedMembers)
+        public static void Visualize(
+            dynamic input,
+            IEnumerable<string> whitelistedMembers = null,
+            IEnumerable<string> blacklistedMembers = null)
         {
-            InitializeMembers();
-            foreach (var x in whitelistedMembers) Whitelist.Add(x);
-            foreach (var x in blacklistedMembers) Blacklist.Add(x);
+            //Initialize static members
+            ProcessedNodes = new Dictionary<object, int>();
+            Whitelist = new List<string>();
+            Blacklist = new List<string>();
+            SB = new StringBuilder();
+
+            if (whitelistedMembers != null)
+                foreach (var x in whitelistedMembers) Whitelist.Add(x);
+
+            if (blacklistedMembers != null)
+                foreach (var x in blacklistedMembers) Blacklist.Add(x);
 
             Blacklist.Add("k__BackingField");
             Blacklist.Add("m_value");
@@ -156,8 +129,10 @@ namespace DataStructureVisualization
         }
 
         /// <summary>
-        /// recursive function handling a member of the 'input' param
-        /// creates nodes and edges in DOT notation for graphViz
+        /// Inspect all properties and fields in object 'input' and calls this method again for every
+        /// member. Creates nodes and edges in the DOT file for visualization. Whitelist, Blacklist and 
+        /// ToString() implementation of members determines process by ignoring values except for those 
+        /// named in Whitelist while skipping members named in Blacklist.
         /// </summary>
         /// <param name="input">object to which the member belongs</param>
         /// <param name="member">member to be handled for this method call</param>
@@ -168,7 +143,7 @@ namespace DataStructureVisualization
             //exclude duplicate information stored in backing fields except for whitelisted member names
             if (Blacklist.Any(entry => member.Name.Contains(entry)) && !Whitelist.Contains(member.Name))
             {
-                Console.WriteLine("excluded member " + member.Name);
+                //Console.WriteLine("excluded member " + member.Name);
                 return;
             }
 
@@ -291,7 +266,7 @@ namespace DataStructureVisualization
                                               + destId);
 
                             }
-                            //ToString() is not overriden, iterate properties/fields of entry recursively
+                            //ToString() is not overriden, recurse properties/fields of entry
                             //create parent node for the entry object
                             else
                             {
@@ -412,11 +387,8 @@ namespace DataStructureVisualization
                     //get the actual object behind the member
                     var memberObject = member.GetValue(input);
 
-                    //TODO: figure out which data types not to inspect further (String etc)
-                    //&& !(OverridesToString(memberObject)
-
                     //only go until the object can be displayed
-                    if (memberObject != null )
+                    if (memberObject != null)
                     {
                         //get all properties and call recursive function
                         foreach (var property in memberObject.GetType().GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
@@ -433,7 +405,9 @@ namespace DataStructureVisualization
             //indexed member
             catch (Exception exc)
             {
-                Console.WriteLine(exc.GetType() + "thrown with message: " +exc.Message);
+                Console.WriteLine("-----------");
+                Console.WriteLine(member.Name);
+                Console.WriteLine(exc.Message);
             }
         }
 

@@ -154,7 +154,20 @@ namespace DataStructureVisualization
                 DataStructureVisualizer.Visualize(testlist, whitelist);
             }
 
-                
+
+            //test with Collections.Queue
+            {
+                Queue<int> testQueue = new Queue<int>();
+                testQueue.Enqueue(1);
+                testQueue.Enqueue(2);
+                testQueue.Enqueue(3);
+                testQueue.Enqueue(4);
+
+                List<string> whitelist = new List<string>() { "_array", "_head", "_tail"};
+                DataStructureVisualizer.Visualize(testQueue, whitelist );
+            }
+
+
             Console.WriteLine("done");
             Console.ReadLine();
         }
