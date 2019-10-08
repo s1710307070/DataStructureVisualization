@@ -8,10 +8,8 @@ namespace DataStructureVisualization
     {
         static void Main(string[] args)
         {
-            //several different data structures for testing
-
-            //binary tree
             /*
+            //binary tree
             {
                 BinaryTree testTree = new BinaryTree();
                 Random rnd = new Random();
@@ -87,7 +85,7 @@ namespace DataStructureVisualization
 
                 DataStructureVisualizer.Visualize(testQueue, new List<String>() { "_array", "_item" });
             }
-            */
+
             //tests with skip list implementation 
             {
 
@@ -105,39 +103,51 @@ namespace DataStructureVisualization
                 //DataStructureVisualizer.Visualize(testSkipList, testList4);
                 DataStructureVisualizer.Visualize(testSkipList, testList4, testList41);
             }
-
+            
             //test with Student object
             {
-                /*
-                String s = new String("xd");
-                DataStructureVisualizer.IsOverridden(s, "ToString");
-                StringWrapper sw = new StringWrapper("xdd");
-                DataStructureVisualizer.IsOverridden(sw, "ToString");
-                DataStructureVisualizer.IsOverridden(10, "ToString");
-                int i = 0;
-                DataStructureVisualizer.IsOverridden(i, "ToString");
-                char c = 'x';
-                DataStructureVisualizer.IsOverridden(c, "ToString");
-                
-            */
-                /*
-                    Student testStudent = new Student();
-                    StringWrapper[] temp = new StringWrapper[2];
-                    temp[0] = new StringWrapper("WS1");
-                    temp[1] = new StringWrapper("WS2");
-                    testStudent.wrappedStrings = temp;
-                    testStudent.wrappedString = new StringWrapper("WS§");
-                    testStudent.brother = new Student[]{new Student()};
+                Student testStudent = new Student();
+                StringWrapper[] temp = new StringWrapper[2];
+                temp[0] = new StringWrapper("WS1");
+                temp[1] = new StringWrapper("WS2");
+                testStudent.wrappedStrings = temp;
+                testStudent.wrappedString = new StringWrapper("WS§");
+                testStudent.brother = new Student[]{new Student()};
 
-                    List<String> testList5 = new List<String>() {"brother", "content", "kidsList", "kids", "wrappedStrings", "wrappedString", "Info" };
+                List<String> testList5 = new List<String>() {"brother", "content", "kidsList", "kids", "wrappedStrings", "wrappedString", "Info" };
 
-                    DataStructureVisualizer.Visualize(testStudent, testList5);
-                }
-
-                */
-                Console.WriteLine("done");
-                Console.ReadLine();
+                DataStructureVisualizer.Visualize(testStudent, testList5);
             }
+            */
+
+            //test with Person object
+            {
+                Person herbert = new Person("Herbert", 56);
+                herbert.Spouse = new Person("Karin", 56);
+
+                Person david = new Person("David", 22);
+                Person fabian = new Person("Fabian", 24);
+
+                herbert.kids.Add(david);
+                herbert.kids.Add(fabian);
+
+                Person alex = new Person("Alex", 24);
+                Person nico = new Person("Nico", 20);
+
+                david.friends.Add(alex);
+                david.friends.Add(nico);
+
+                herbert.friends.Add(alex);
+
+                List<string> WL = new List<string>() { "kids", "Age", "Name", "friends"};
+
+                DataStructureVisualizer.Visualize(herbert, WL);
+
+            }
+
+                
+            Console.WriteLine("done");
+            Console.ReadLine();
         }
     }
 }

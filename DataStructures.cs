@@ -225,6 +225,25 @@ namespace DataStructureVisualization
 
     }
 
+    class Person
+    {
+        public String Name {get;}
+        public int Age {get;}
+        public Person Spouse {get; set;}
+        public List<Person> kids;
+        public List<Person> friends;
+
+        private Person() {}
+
+        public Person(String name, int age) 
+        {
+            this.Name = name;
+            this.Age = age;
+            this.kids = new List<Person>();
+            this.friends = new List<Person>();
+        }
+    }
+
     //====================================================
     //| Downloaded From                                  |
     //| Visual C# Kicks - http://vckicks.110mb.com/      |
