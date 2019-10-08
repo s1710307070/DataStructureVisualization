@@ -8,7 +8,7 @@ namespace DataStructureVisualization
     {
         static void Main(string[] args)
         {
-            /*
+            
             //binary tree
             {
                 BinaryTree testTree = new BinaryTree();
@@ -21,6 +21,7 @@ namespace DataStructureVisualization
                 //DataStructureVisualizer.Visualize(testTree, testList1);
             }
 
+            /*
             
             //nodes with data members and left/right references
             {
@@ -57,6 +58,7 @@ namespace DataStructureVisualization
 
             }
             
+            /*
             
             //tests with list of nodes as member
             {
@@ -85,10 +87,10 @@ namespace DataStructureVisualization
 
                 DataStructureVisualizer.Visualize(testQueue, new List<String>() { "_array", "_item" });
             }
+            */
 
             //tests with skip list implementation 
             {
-
 
                 CSKicksCollection.SkipList<int> testSkipList = new CSKicksCollection.SkipList<int>();
                 Random rnd2 = new Random();
@@ -96,7 +98,6 @@ namespace DataStructureVisualization
 
                 List<String> testList4 = new List<String>() {"Levels"};
 
-                //TODO: fix so that blacklist gets checked at every point in the program
                 List<String> testList41 = new List<string>() { "Value", "value", "Next", "next" };
 
                 //DataStructureVisualizer.Visualize(testSkipList);
@@ -104,6 +105,7 @@ namespace DataStructureVisualization
                 DataStructureVisualizer.Visualize(testSkipList, testList4, testList41);
             }
             
+            /*
             //test with Student object
             {
                 Student testStudent = new Student();
@@ -143,7 +145,16 @@ namespace DataStructureVisualization
 
                 DataStructureVisualizer.Visualize(herbert, WL);
 
+
             }
+
+            //test with Collections.List
+            {
+                List<int> testlist = new List<int>() { 1, 2, 3, 4, 5, 6, 7, 8 };
+                List<string> whitelist = new List<string>() { "_items" };
+                DataStructureVisualizer.Visualize(testlist, whitelist);
+            }
+
 
                 
             Console.WriteLine("done");

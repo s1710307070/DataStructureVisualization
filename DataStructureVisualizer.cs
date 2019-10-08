@@ -29,24 +29,15 @@ namespace DataStructureVisualization
         private static StringBuilder SB;
 
         /// <summary>
-        /// TODO: not finalized
-        /// Check if an object has an overridden ToString method
+        /// Returns true if an object overrides the ToString() method
         /// </summary>
         /// <param name="obj"></param>
-        /// <param name="methodName"></param>
-        /// <returns></returns>
-        public static bool IsOverridden(dynamic obj, string methodName)
+        /// <returns>True if overridden</returns>
+        public static bool OverridesToString(dynamic obj)
         {
-            /*
-            Console.WriteLine("-----");
-            Console.WriteLine(obj.ToString());
-            Console.WriteLine(obj.GetType().FullName);
-            */
-
+            //Console.WriteLine(obj.GetType().FullName);
             if (obj.ToString().Contains("`"))
             {
-                //Console.WriteLine(obj.ToString().Remove(obj.ToString().IndexOf("`")));
-
                 return !obj.ToString().Remove(obj.ToString().IndexOf("`"))
                     .Equals(obj.GetType().FullName.Remove(obj.GetType().FullName.IndexOf("`")));
             }
@@ -63,9 +54,9 @@ namespace DataStructureVisualization
         }
 
         /// <summary>
-        /// Visualize data structure of parameter. Include all members recursively except
-        /// for certain properties and backing fields obscuring the relevant information
-        /// Does not show values of members in the data structure
+        /// Visualize data structure of 'input'. Include all members recursively except
+        /// for certain properties and backing fields obscuring the relevant information.
+        /// Does not show values of members in the data structure.
         /// </summary>
         /// <param name="input">object to be visualized</param>
         public static void Visualize(dynamic input)
@@ -76,13 +67,13 @@ namespace DataStructureVisualization
         }
 
         /// <summary>
-        /// Visualize data structure of parameter. Include all members recursively except
-        /// for certain properties and backing fields obscuring the relevant information
-        /// Does not show values of members in the data structure except for properties
-        /// specifically named in the second parameter
+        /// Visualize data structure of 'input'. Include all members recursively except
+        /// for certain properties and backing fields obscuring the relevant information.
+        /// Does not show values of members in the data structure except for those
+        /// specifically named (case sensitive) in 'whitelistedMembers.
         /// </summary>
         /// <param name="input">object to be visualized</param>
-        /// <param name="whitelistedMembers">named members with displayed dat</param>
+        /// <param name="whitelistedMembers">members to display values</param>
         public static void Visualize(dynamic input, IEnumerable<string> whitelistedMembers)
         {
             List<string> emptyBlacklist = new List<string>();
@@ -90,25 +81,19 @@ namespace DataStructureVisualization
         }
 
 
-
         /// <summary>
-        /// Visualize data structure of parameter. Include all members recursively except
-        /// for certain properties and backing fields obscuring the relevant information
-        /// Does not show values of members in the data structure except for properties
-        /// specifically named in the second parameter. Blocks and does not include members
-        /// with a name included in the second parameter
+        /// Visualize data structure of 'input'. Include all members recursively except
+        /// for certain properties and backing fields obscuring the relevant information.
+        /// Does not show values of members in the data structure except for those
+        /// specifically named (case sensitive) in 'whitelistedMembers. Ignores members
+        /// named in 'blacklistedMembers' and does not include members of those.
         /// </summary>
         /// <param name="input">object to be visualized</param>
-        /// <param name="whitelistedMembers">named members with displayed dat</param>
+        /// <param name="whitelistedMembers">members to display values</param>
+        /// <param name="blacklistedMembers">members to be ignored</param>
         public static void Visualize(dynamic input, IEnumerable<string> whitelistedMembers, IEnumerable<string> blacklistedMembers)
         {
             InitializeMembers();
-
-            //get dynamic type of the input object
-            Type inputType = input.GetType();
-
-            SW = new StreamWriter("vis_" + inputType.Name + ".dot");
-
             foreach (var x in whitelistedMembers) Whitelist.Add(x);
             foreach (var x in blacklistedMembers) Blacklist.Add(x);
 
@@ -118,7 +103,10 @@ namespace DataStructureVisualization
             foreach (var x in typeof(String).GetProperties()) Blacklist.Add(x.Name);
             foreach (var x in typeof(String).GetFields()) Blacklist.Add(x.Name);
 
+            //get dynamic type of the input object
+            Type inputType = input.GetType();
 
+            SW = new StreamWriter("vis_" + inputType.Name + ".dot");
 
             SW.WriteLine("//created " + DateTime.Now.ToString("dd/MM/yyyy HH:mm") + " by DataStructureVisualizer (K.D.)\n");
             SW.WriteLine("digraph " + Regex.Replace(inputType.Name.ToString(), "`", "") + " {\n rankdir=TB;\n");
@@ -127,7 +115,12 @@ namespace DataStructureVisualization
             int sourceId = 0;
             int destId = 0;
 
-            SW.WriteLine("struct" + destId + " [shape=box3d, style=filled fillcolor=\"0.6 0.3 1.000\", label=\"" + inputType.Name + "\"];");
+            SW.WriteLine("struct"
+                         + destId
+                         + " [shape=box3d, style=filled fillcolor=\"0.6 0.3 1.000\", label=\""
+                         + inputType.Name
+                         + "\"];");
+
             ProcessedNodes.Add(input, destId);
 
             try
@@ -224,11 +217,11 @@ namespace DataStructureVisualization
                     return;
                 }
 
-                //add to processedNodes
-                ProcessedNodes.Add(member.GetValue(input), destId + 1);
+                //add to processedNodes if it is not a simple type
+                if (!member.GetValue(input).GetType().IsPrimitive) ProcessedNodes.Add(member.GetValue(input), destId + 1);
 
                 //handle Enumerables and avoid splitting up String into chars etc
-                if (member.GetValue(input) is IEnumerable && !IsOverridden(member.GetValue(input), "ToString"))
+                if (member.GetValue(input) is IEnumerable && !OverridesToString(member.GetValue(input)))
                 {
 
                     if (!Whitelist.Contains(member.Name))
@@ -237,7 +230,7 @@ namespace DataStructureVisualization
                         //creating node
                         SW.WriteLine("struct"
                                      + destId
-                                     + "[shape = folder, style = filled fillcolor =\"0.0 0.0 1.000\", label=\""
+                                     + "[shape = folder, style = filled fillcolor =\"0.0 0.0 2.000\", label=\""
                                      + member.Name
                                      + "\"];");
 
@@ -254,7 +247,7 @@ namespace DataStructureVisualization
                         //creating node
                         SW.WriteLine("struct"
                                      + destId
-                                     + "[shape = folder, style = filled fillcolor =\"0.2 0.2 1.000\", label=\""
+                                     + "[shape = folder, style = filled fillcolor =\"0.6 0.3 1.000\", label=\""
                                      + member.Name
                                      + "\"];");
 
@@ -265,13 +258,15 @@ namespace DataStructureVisualization
                                       + "struct"
                                       + destId);
 
-                        sourceId = destId;
 
                         //iterate the IEnumerable and process each entry
+                        int enumId = destId;
+                        int entryCount = 0;
+
                         foreach (var entry in member.GetValue(input))
                         {
                             //ToString() is overridden, display values
-                            if (IsOverridden(entry, "ToString"))
+                            if (OverridesToString(entry))
                             {
                                 destId++;
                                 //creating node
@@ -283,15 +278,35 @@ namespace DataStructureVisualization
 
                                 //creating edge from the source node
                                 SB.AppendLine("struct"
-                                              + sourceId
+                                              + enumId
                                               + " -> "
                                               + "struct"
                                               + destId);
 
                             }
                             //ToString() is not overriden, iterate properties/fields of entry recursively
+                            //create parent node for the entry object
                             else
                             {
+
+                                destId++;
+                                entryCount++;
+                                //creating node
+                                SW.WriteLine("struct"
+                                             + destId
+                                             + "[shape = record, style = filled fillcolor =\"0.2 0.2 1.000\", label=\""
+                                             + "entry_" + entryCount
+                                             + "\"];");
+
+                                //creating edge from the source node
+                                SB.AppendLine("struct"
+                                              + enumId
+                                              + " -> "
+                                              + "struct"
+                                              + destId);
+
+
+                                sourceId = destId;
 
                                 //get all properties and call recursive function
                                 foreach (var property in entry.GetType().GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
@@ -311,7 +326,7 @@ namespace DataStructureVisualization
                 //display and iterate whitelisted members
                 if (Whitelist.Contains(member.Name))
                 {
-                    if (IsOverridden(member.GetValue(input), "ToString"))
+                    if (OverridesToString(member.GetValue(input)))
                     {
                         destId++;
                         //creating node
@@ -391,7 +406,7 @@ namespace DataStructureVisualization
                     var memberObject = member.GetValue(input);
 
                     //TODO: figure out which data types not to inspect further (String etc)
-                    //&& !(IsOverridden(memberObject, "ToString"))
+                    //&& !(OverridesToString(memberObject)
 
                     //only go until the object can be displayed
                     if (memberObject != null )
