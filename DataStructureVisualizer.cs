@@ -3,13 +3,21 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 
 namespace DataStructureVisualization
 {
+    /// <summary>
+    /// DataStructureVisualizer contains a Method 'Visualize' which recursively iterates the 
+    /// data structure of an object and creates a DOT file containing graph description language
+    /// which can be visualized with graphviz (graphviz.org).
+    /// Overloads of 'Visualize()' let your control what values and members will be included
+    /// in the result file. 
+    /// ----------------------------
+    /// ###Created by David Kastner
+    /// </summary>
     static class DataStructureVisualizer
     {
 
@@ -33,7 +41,7 @@ namespace DataStructureVisualization
         /// </summary>
         /// <param name="obj"></param>
         /// <returns>True if overridden</returns>
-        public static bool OverridesToString(dynamic obj)
+        private static bool OverridesToString(dynamic obj)
         {
             //Console.WriteLine(obj.GetType().FullName);
             if (obj.ToString().Contains("`"))
@@ -163,7 +171,6 @@ namespace DataStructureVisualization
                 Console.WriteLine("excluded member " + member.Name);
                 return;
             }
-
 
             try
             {
@@ -424,9 +431,9 @@ namespace DataStructureVisualization
 
             }
             //indexed member
-            catch (TargetParameterCountException exc)
+            catch (Exception exc)
             {
-                Console.WriteLine(exc.Message);
+                Console.WriteLine(exc.GetType() + "thrown with message: " +exc.Message);
             }
         }
 

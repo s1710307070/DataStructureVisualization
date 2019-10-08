@@ -18,7 +18,6 @@ namespace DataStructureVisualization
 
                 List<String> testList1 = new List<String>() {"Data"};
                 DataStructureVisualizer.Visualize(testTree, testList1);
-                //DataStructureVisualizer.Visualize(testTree, testList1);
             }
 
             /*
@@ -154,7 +153,6 @@ namespace DataStructureVisualization
                 List<string> whitelist = new List<string>() { "_items" };
                 DataStructureVisualizer.Visualize(testlist, whitelist);
             }
-
 
                 
             Console.WriteLine("done");
