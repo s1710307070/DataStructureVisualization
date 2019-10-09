@@ -28,11 +28,11 @@ namespace DataStructureVisualization
         //contains the names of memebers which should be ignored while iterating data structure
         private static List<string> Blacklist;
 
-        //streamwriter to create nodes in the DOT file
-        private static StreamWriter SW;
+        //strinbuilder to create nodes in the DOT file
+        private static StringBuilder NodeBuilder;
 
         //stringbuilder to create edges at the end of the DOT file
-        private static StringBuilder SB;
+        private static StringBuilder EdgeBuilder;
 
         /// <summary>
         /// Returns true if an object overrides the ToString() method
@@ -70,7 +70,9 @@ namespace DataStructureVisualization
             ProcessedNodes = new Dictionary<object, int>();
             Whitelist = new List<string>();
             Blacklist = new List<string>();
-            SB = new StringBuilder();
+
+            NodeBuilder = new StringBuilder();
+            EdgeBuilder = new StringBuilder();
 
             if (whitelistedMembers != null)
                 foreach (var x in whitelistedMembers) Whitelist.Add(x);
@@ -87,20 +89,23 @@ namespace DataStructureVisualization
             //get dynamic type of the input object
             Type inputType = input.GetType();
 
-            SW = new StreamWriter("vis_" + inputType.Name + ".dot");
+            StreamWriter SW = new StreamWriter("vis_" + inputType.Name + ".dot");
 
-            SW.WriteLine("//created " + DateTime.Now.ToString("dd/MM/yyyy HH:mm") + " by DataStructureVisualizer (K.D.)\n");
-            SW.WriteLine("digraph " + Regex.Replace(inputType.Name.ToString(), "`", "") + " {\n rankdir=TB;\n");
+            SW.WriteLine("//created " + DateTime.Now.ToString("dd/MM/yyyy HH:mm") + " by DataStructureVisualizer (K.D.)");
+            SW.WriteLine("digraph " + Regex.Replace(inputType.Name.ToString(), "`", "") + " {\n rankdir=TB;");
 
             //sourceId and destId to distinguish nodes and draw edges between nodes
             int sourceId = 0;
             int destId = 0;
+            int innerId = 0;
 
-            SW.WriteLine("struct"
-                         + destId
-                         + " [shape=box3d, style=filled fillcolor=\"0.6 0.3 1.000\", label=\""
-                         + inputType.Name
-                         + "\"];");
+            NodeBuilder.Append("struct"
+                               + destId
+                               + " [shape=record, style=filled fillcolor=\"0.6 0.3 1.000\", label=\""
+                               + "{ <"
+                               + innerId
+                               + "> "
+                               + inputType.Name);
 
             ProcessedNodes.Add(input, destId);
 
@@ -108,11 +113,99 @@ namespace DataStructureVisualization
             {
                 //get all properties and call recursive function
                 foreach (var property in inputType.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
-                    if (property != null) VisualizeRecursively(input, property, sourceId, ref destId);
+                {
+                    if (property != null)
+                    {
+                        if (Blacklist.Contains(property.Name)) continue;
+                        if (property.GetValue(input) == null) continue;
+                        if (property.GetValue(input).GetType().IsValueType)
+                        {
+                            if (Whitelist.Contains(property.Name))
+                            {
+                                innerId++;
+                                NodeBuilder.Append("| <"
+                                                   + innerId
+                                                   + "> "
+                                                   + property.Name
+                                                   + " | "
+                                                   + property.GetValue(input)
+                                                   + " } ");
+                            }
+                            else
+                            {
+                                innerId++;
+                                NodeBuilder.Append("| <"
+                                                   + innerId
+                                                   + "> "
+                                                   + property.Name
+                                                   + " ");
+                            }
+
+                        }
+                        //reference type
+                        else
+                        {
+                            innerId++;
+                            NodeBuilder.Append("| <"
+                                               + innerId
+                                               + "> "
+                                               + property.Name
+                                               + " ");
+
+
+                            sourceId = destId;
+                            VisualizeRecursively(input, property, sourceId, innerId, ref destId);
+                        }
+                    }
+                }
+
 
                 //get all fields and call recursive function
                 foreach (var field in inputType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
-                    if (field != null) VisualizeRecursively(input, field, sourceId, ref destId);
+                {
+                    if (field != null)
+                    {
+                        if (Blacklist.Contains(field.Name)) continue;
+                        if (field.GetValue(input) == null) continue;
+                        if (field.GetValue(input).GetType().IsValueType)
+                        {
+                            if (Whitelist.Contains(field.Name))
+                            {
+                                innerId++;
+                                NodeBuilder.Append("| <"
+                                                   + innerId
+                                                   + "> "
+                                                   + field.Name
+                                                   + " | "
+                                                   + field.GetValue(input)
+                                                   + " } ");
+                            }
+                            else
+                            {
+                                innerId++;
+                                NodeBuilder.Append("| <"
+                                                   + innerId
+                                                   + "> "
+                                                   + field.Name
+                                                   + " ");
+                            }
+
+                        }
+                        //reference type
+                        else
+                        {
+                            innerId++;
+                            NodeBuilder.Append("| <"
+                                               + innerId
+                                               + "> "
+                                               + field.Name
+                                               + " ");
+
+                            sourceId = destId;
+                            VisualizeRecursively(input, field, sourceId, innerId, ref destId);
+                        }
+                    }
+                }
 
             }
             catch (Exception e)
@@ -121,7 +214,11 @@ namespace DataStructureVisualization
             }
             finally
             {
-                SW.WriteLine(SB + "}");
+                NodeBuilder.AppendLine();
+                NodeBuilder.Replace(System.Environment.NewLine, "} \"]" + System.Environment.NewLine);
+                SW.WriteLine(NodeBuilder);
+                SW.Write(EdgeBuilder);
+                SW.WriteLine("}");
                 SW.Flush();
                 SW.Close();
             }
@@ -137,38 +234,32 @@ namespace DataStructureVisualization
         /// <param name="input">object to which the member belongs</param>
         /// <param name="member">member to be handled for this method call</param>
         /// <param name="sourceId">source node to draw the edge from</param>
+        /// <param name="innerSourceId">inner id of source node to draw edge from</param>"
         /// <param name="destId">current id to identify nodes for visualization</param>
-        private static void VisualizeRecursively(dynamic input, dynamic member, int sourceId, ref int destId)
+        private static void VisualizeRecursively(dynamic input, dynamic member, int sourceId, int innerSourceId, ref int destId)
         {
-            //exclude duplicate information stored in backing fields except for whitelisted member names
-            if (Blacklist.Any(entry => member.Name.Contains(entry)) && !Whitelist.Contains(member.Name))
-            {
-                //Console.WriteLine("excluded member " + member.Name);
-                return;
-            }
 
             try
             {
                 //member is null, exclude these eventually
                 if (member.GetValue(input) == null)
                 {
-                    /*
                     destId++;
                     //creating node
-                    SW.WriteLine("struct"
+                    NodeBuilder.AppendLine("struct"
                                  + destId
-                                 + " [shape=record style=filled fillcolor=\"0.8 0.1 1.000\", label=\""
-                                 + member.Name + " (null) "
+                                 + " [shape=point style=filled fillcolor=\"0.8 0.1 1.000\", label=\""
+                                 + member.GetType()
                                  + "\"];");
 
                     //creating edge from the source node
-                    SB.AppendLine("struct"
+                    EdgeBuilder.AppendLine("struct"
                                   + sourceId
+                                  + ":" + innerSourceId
                                   + " -> "
                                   + "struct"
                                   + destId);
 
-                    */
                     return;
                 }
 
@@ -177,21 +268,23 @@ namespace DataStructureVisualization
                 {
                     destId++;
                     //creating node
-                    SW.WriteLine("struct"
+                    NodeBuilder.AppendLine("struct"
                                  + destId
                                  + " [shape=record label=\""
-                                 + member.Name
+                                 + member.GetType()
                                  + "\"];");
 
                     //creating edge from the source node
-                    SB.AppendLine("struct"
+                    //todo: not sure if this is right
+                    EdgeBuilder.AppendLine("struct"
                                   + sourceId
+                                  + ":" + innerSourceId
                                   + " -> "
                                   + "struct"
                                   + destId);
 
                     //creating edge back to the existing node
-                    SB.AppendLine("struct"
+                    EdgeBuilder.AppendLine("struct"
                                   + destId
                                   + " -> "
                                   + "struct"
@@ -199,25 +292,150 @@ namespace DataStructureVisualization
                     return;
                 }
 
-                //add to processedNodes if it is not a simple type
-                if (!member.GetValue(input).GetType().IsPrimitive) ProcessedNodes.Add(member.GetValue(input), destId + 1);
+                //obj behind the reference
+                var memberObj = member.GetValue(input);
 
+                //add to processedNodes if it is not a simple type
+                if (!memberObj.GetType().IsPrimitive) ProcessedNodes.Add(memberObj, destId + 1);
+
+                int innerDestId = 0;
+                destId++;
+
+                NodeBuilder.AppendLine();
+                NodeBuilder.Append("struct"
+                                   + destId
+                                   + " [shape=record label=\" {"
+                                   + " <"
+                                   + innerDestId
+                                   + "> "
+                                   + memberObj.GetType().Name
+                                   + " ");
+
+                EdgeBuilder.AppendLine("struct"
+                                       + sourceId
+                                       + ":"
+                                       + innerSourceId
+                                       + " -> "
+                                       + "struct"
+                                       + destId);
+
+                //get all properties and call recursive function
+                foreach (var property in memberObj.GetType().GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+                {
+                    if (property != null)
+                    {
+                        if (Blacklist.Contains(property.Name)) continue;
+                        if (property.GetValue(input) == null) continue;
+                        if (property.GetValue(input).GetType().IsValueType)
+                        {
+                            if (Whitelist.Contains(property.Name))
+                            {
+                                innerDestId++;
+                                NodeBuilder.Append("| <"
+                                                   + innerDestId
+                                                   + "> "
+                                                   + property.Name
+                                                   + " | "
+                                                   + property.GetValue(memberObj)
+                                                   + " } ");
+                            }
+                            else
+                            {
+                                innerDestId++;
+                                NodeBuilder.Append("| <"
+                                                   + innerDestId
+                                                   + "> "
+                                                   + property.Name
+                                                   + " ");
+                            }
+
+                        }
+                        //reference type
+                        else
+                        {
+                            innerDestId++;
+                            NodeBuilder.Append("| <"
+                                               + innerDestId
+                                               + "> "
+                                               + property.Name
+                                               + " ");
+
+                            sourceId = destId;
+
+                            VisualizeRecursively(memberObj, property, sourceId, innerDestId, ref destId);
+                        }
+                    }
+                }
+
+                //get all fields and call recursive function
+                foreach (var field in memberObj.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+                {
+                    if (field != null)
+                    {
+                        if (Blacklist.Contains(field.Name)) continue;
+                        if (field.GetValue(input) == null) continue;
+                        if (field.GetValue(input).GetType().IsValueType)
+                        {
+                            if (Whitelist.Contains(field.Name))
+                            {
+                                innerDestId++;
+                                NodeBuilder.Append("| <"
+                                                   + innerDestId
+                                                   + "> "
+                                                   + field.Name
+                                                   + " | "
+                                                   + field.GetValue(memberObj)
+                                                   + " } ");
+                            }
+                            else
+                            {
+                                innerDestId++;
+                                NodeBuilder.Append("| <"
+                                                   + innerDestId
+                                                   + "> "
+                                                   + field.Name
+                                                   + " ");
+                            }
+
+                        }
+                        //reference type
+                        else
+                        {
+                            innerDestId++;
+                            NodeBuilder.Append("| <"
+                                               + innerDestId
+                                               + "> "
+                                               + field.Name
+                                               + " ");
+
+                            sourceId = destId;
+
+                            VisualizeRecursively(memberObj, field, sourceId, innerDestId, ref destId);
+                        }
+                    }
+                }
+
+
+
+
+
+                /*
                 //handle Enumerables and avoid splitting up String into chars etc
                 if (member.GetValue(input) is IEnumerable && !OverridesToString(member.GetValue(input)))
                 {
-
+                    
                     if (!Whitelist.Contains(member.Name))
                     {
                         destId++;
                         //creating node
-                        SW.WriteLine("struct"
+                        NodeBuilder.WriteLine("struct"
                                      + destId
                                      + "[shape = folder, style = filled fillcolor =\"0.0 0.0 2.000\", label=\""
                                      + member.Name
                                      + "\"];");
 
                         //creating edge from the source node
-                        SB.AppendLine("struct"
+                        EdgeBuilder.AppendLine("struct"
                                       + sourceId
                                       + " -> "
                                       + "struct"
@@ -227,14 +445,14 @@ namespace DataStructureVisualization
                     {
                         destId++;
                         //creating node
-                        SW.WriteLine("struct"
+                        NodeBuilder.WriteLine("struct"
                                      + destId
                                      + "[shape = folder, style = filled fillcolor =\"0.6 0.3 1.000\", label=\""
                                      + member.Name
                                      + "\"];");
 
                         //creating edge from the source node
-                        SB.AppendLine("struct"
+                        EdgeBuilder.AppendLine("struct"
                                       + sourceId
                                       + " -> "
                                       + "struct"
@@ -252,14 +470,14 @@ namespace DataStructureVisualization
                             {
                                 destId++;
                                 //creating node
-                                SW.WriteLine("struct"
+                                NodeBuilder.WriteLine("struct"
                                              + destId
                                              + "[shape = record, style = filled fillcolor =\"0.2 0.2 1.000\", label=\""
                                              + entry.ToString()
                                              + "\"];");
 
                                 //creating edge from the source node
-                                SB.AppendLine("struct"
+                                EdgeBuilder.AppendLine("struct"
                                               + enumId
                                               + " -> "
                                               + "struct"
@@ -274,14 +492,14 @@ namespace DataStructureVisualization
                                 destId++;
                                 entryCount++;
                                 //creating node
-                                SW.WriteLine("struct"
+                                NodeBuilder.WriteLine("struct"
                                              + destId
                                              + "[shape = record, style = filled fillcolor =\"0.2 0.2 1.000\", label=\""
                                              + "entry_" + entryCount
                                              + "\"];");
 
                                 //creating edge from the source node
-                                SB.AppendLine("struct"
+                                EdgeBuilder.AppendLine("struct"
                                               + enumId
                                               + " -> "
                                               + "struct"
@@ -312,7 +530,7 @@ namespace DataStructureVisualization
                     {
                         destId++;
                         //creating node
-                        SW.WriteLine("struct"
+                        NodeBuilder.WriteLine("struct"
                                      + destId
                                      + " [shape=record style=filled fillcolor=\"0.2 0.2 1.000\", label=\""
                                      + member.Name
@@ -321,7 +539,7 @@ namespace DataStructureVisualization
                                      + "\"];");
 
                         //creating edge
-                        SB.AppendLine("struct"
+                        EdgeBuilder.AppendLine("struct"
                                       + sourceId
                                       + " -> "
                                       + "struct"
@@ -331,14 +549,14 @@ namespace DataStructureVisualization
                     {
                         destId++;
                         //creating node
-                        SW.WriteLine("struct"
+                        NodeBuilder.WriteLine("struct"
                                      + destId
                                      + " [shape=record style=filled fillcolor=\"0.2 0.2 1.000\", label=\""
                                      + member.Name
                                      + "\"];");
 
                         //creating edge
-                        SB.AppendLine("struct"
+                        EdgeBuilder.AppendLine("struct"
                                       + sourceId
                                       + " -> "
                                       + "struct"
@@ -368,14 +586,14 @@ namespace DataStructureVisualization
                 {
                     destId++;
                     //creating node
-                    SW.WriteLine("struct"
+                    NodeBuilder.WriteLine("struct"
                                  + destId
                                  + " [shape=record, label=\""
                                  + member.Name
                                  + "\"];");
 
                     //creating edge from the source node
-                    SB.AppendLine("struct"
+                    EdgeBuilder.AppendLine("struct"
                                   + sourceId
                                   + " -> "
                                   + "struct"
@@ -401,13 +619,15 @@ namespace DataStructureVisualization
 
                 }
 
+                */
             }
+
             //indexed member
             catch (Exception exc)
             {
                 Console.WriteLine("-----------");
                 Console.WriteLine(member.Name);
-                Console.WriteLine(exc.Message);
+                Console.WriteLine(exc.GetType() + exc.Message);
             }
         }
 

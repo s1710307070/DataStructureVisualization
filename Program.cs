@@ -86,7 +86,7 @@ namespace DataStructureVisualization
 
                 DataStructureVisualizer.Visualize(testQueue, new List<String>() { "_array", "_item" });
             }
-            */
+            
 
             //tests with skip list implementation 
             {
@@ -119,7 +119,7 @@ namespace DataStructureVisualization
 
                 DataStructureVisualizer.Visualize(testStudent, testList5);
             }
-            */
+            
 
             //test with Person object
             {
@@ -167,7 +167,7 @@ namespace DataStructureVisualization
                 List<string> whitelist = new List<string>() { "_array", "_head", "_tail"};
                 DataStructureVisualizer.Visualize(testQueue, whitelist );
             }
-
+            */
 
             Console.WriteLine("done");
             Console.ReadLine();
