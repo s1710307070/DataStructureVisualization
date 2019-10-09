@@ -13,7 +13,7 @@ namespace DataStructureVisualization
             {
                 BinaryTree testTree = new BinaryTree();
                 Random rnd = new Random();
-                for (int i = 0; i < 5; i++) testTree.Insert(rnd.Next(1, 10000));
+                for (int i = 0; i < 50; i++) testTree.Insert(rnd.Next(1, 10000));
                 //testTree.DisplayTree();
 
                 List<String> testList1 = new List<String>() {"Data"};
@@ -140,7 +140,8 @@ namespace DataStructureVisualization
 
                 herbert.friends.Add(alex);
 
-                List<string> WL = new List<string>() { "kids", "Age", "Name", "friends"};
+                List<string> WL = new List<string>() {"kids", "Age", "Name", "friends"};
+
 
                 DataStructureVisualizer.Visualize(herbert, WL);
 

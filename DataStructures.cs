@@ -13,7 +13,6 @@ namespace DataStructureVisualization
     {
         //public static int someId = 0;
 
-        [ShowData]
         public int Data { get; set; }
 
         public Node Left { get; set; }

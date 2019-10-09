@@ -10,7 +10,7 @@ using System.Text.RegularExpressions;
 namespace DataStructureVisualization
 {
     /// <summary>
-    /// DataStructureVisualizer contains a Method 'Visualize' which recurses the 
+    /// DataStructureVisualizer implements a Method 'Visualize' which recurses the 
     /// data structure of an object and creates a DOT file containing graph description language
     /// which can be visualized with graphviz (graphviz.org). Visualization can be influenced by 
     /// passing names of members which will be displayed with value or be ignored while recursing;
