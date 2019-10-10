@@ -13,8 +13,8 @@ namespace DataStructureVisualization
             {
                 BinaryTree testTree = new BinaryTree();
                 Random rnd = new Random();
-                for (int i = 0; i < 20; i++) testTree.Insert(rnd.Next(1, 10000));
-                testTree.DisplayTree();
+                for (int i = 0; i < 50; i++) testTree.Insert(rnd.Next(1, 10000));
+                //testTree.DisplayTree();
 
                 List<String> testList1 = new List<String>() {"Data"};
                 DataStructureVisualizer.Visualize(testTree, testList1);

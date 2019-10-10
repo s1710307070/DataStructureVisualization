@@ -19,18 +19,6 @@ namespace DataStructureVisualization
 
         public Node Right { get; set; }
 
-        public int[] values;
-
-        //public List<String> hiddenNames;
-
-        //[ShowData]
-        public List<Node> nodeList;
-
-        //public List<String> visibleNames;
-        public Node()
-        {
-
-        }
         public Node(int data)
         {
             this.Data = data;
@@ -190,6 +178,7 @@ namespace DataStructureVisualization
         }
     }
 
+    /*
     class Student
     {
         public string Name { get; set; }
@@ -223,6 +212,7 @@ namespace DataStructureVisualization
         }
 
     }
+    */
 
     class Person
     {
