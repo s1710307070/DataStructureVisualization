@@ -9,6 +9,7 @@ namespace DataStructureVisualization
         static void Main(string[] args)
         {
             
+
             //binary tree
             {
                 BinaryTree testTree = new BinaryTree();
@@ -20,8 +21,8 @@ namespace DataStructureVisualization
                 DataStructureVisualizer.Visualize(testTree, testList1);
             }
 
-            /*
             
+            /*
             //nodes with data members and left/right references
             {
                 Node testNode1 = new Node(1);
@@ -39,7 +40,7 @@ namespace DataStructureVisualization
                 //DataStructureVisualizer.Visualize(testNode1, testList2);
             }
 
-            
+            */
 
             //double linked list for testing
             {
