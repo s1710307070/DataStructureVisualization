@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections;
+using System.Linq;
+using Microsoft.VisualBasic;
 
 
 namespace DataStructureVisualization
@@ -8,6 +11,15 @@ namespace DataStructureVisualization
     {
         static void Main(string[] args)
         {
+
+            //test with collections
+            {
+                Queue<int> q = new Queue<int>();
+                q.Append(1);
+                q.Append(2);
+                q.Append(3);
+                DataStructureVisualizer.Visualize(q);
+            }
             
 
             //binary tree
@@ -41,7 +53,7 @@ namespace DataStructureVisualization
             }
 
             */
-
+            /*
             //double linked list for testing
             {
                 DoubleLinkedList testDoubleList = new DoubleLinkedList();
@@ -121,7 +133,7 @@ namespace DataStructureVisualization
                 DataStructureVisualizer.Visualize(testStudent, testList5);
             }
             
-
+            */
             //test with Person object
             {
                 Person herbert = new Person("Herbert", 56);
@@ -146,9 +158,11 @@ namespace DataStructureVisualization
 
                 DataStructureVisualizer.Visualize(herbert, WL);
 
+                DataStructureVisualizer.Visualize(WL);
 
             }
 
+            /*
             //test with Collections.List
             {
                 List<int> testlist = new List<int>() { 1, 2, 3, 4, 5, 6, 7, 8 };
