@@ -155,7 +155,6 @@ namespace DataStructureVisualization
         /// <param name="input">object to which the member belongs</param>
         /// <param name="component">member to be handled in this method call</param>
         /// <param name="source">contains the source node and specific struct item (123:3) as string</param>"
-        /// <param name="destId">current id to identify nodes for visualization</param>
         private static void VisualizeRecursively(dynamic input, dynamic component, string source)
         {
 
