@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -10,15 +9,43 @@ using System.Text.RegularExpressions;
 namespace DataStructureVisualization
 {
     /// <summary>
-    /// DataStructureVisualizer implements a Method 'Visualize' which recurses the 
-    /// data structure of an object and creates a DOT file containing graph description language
-    /// which can be visualized with graphviz (graphviz.org). Visualization can be influenced by 
-    /// passing names of members which will be displayed with value or be ignored while recursing;
+    /// DataStructureVisualizer creates a DOT file containing graph description language
+    /// which can be visualized with graphviz (graphviz.org). Visualization can be influenced by
+    /// optional arguments showing or hiding various members.
     /// ----------------------------
     /// ###Created by David Kastner
     /// </summary>
     static class DataStructureVisualizer
     {
+        //contains member names referencing duplicate information etc
+        private static readonly List<string> DefaultBlacklist = new List<string>()
+        {
+            "k__BackingField",
+            "m_value",
+            "_firstChar",
+            "Item",
+            "IsFixedSize",
+            "IsReadOnly",
+            "Capacity",
+            "Count",
+            "IsSynchronized",
+            "SyncRoot",
+            "_items",
+            "_version",
+            "_size",
+            "Comparer",
+            "First",
+            "Last",
+            "Keys",
+            "Values",
+            "_array",
+            "_head_",
+            "_tail",
+            "length",
+            "LongLength",
+            "Rank"
+        };
+
         //contains all objects that have already been processed
         private static Dictionary<object, string> _processedNodes;
 
@@ -40,6 +67,7 @@ namespace DataStructureVisualization
 
         /// <summary>
         /// Returns true if an object overrides the ToString() method
+        /// currently not used in this version as of 19/10/2019
         /// </summary>
         /// <param name="obj"></param>
         /// <returns>True if overridden</returns>
@@ -53,6 +81,11 @@ namespace DataStructureVisualization
             }
 
             return !(obj.ToString().Equals(obj.GetType().FullName));
+        }
+
+        public static IEnumerable GetDefaultBlacklist()
+        {
+            return DefaultBlacklist;
         }
 
         /// <summary>
@@ -84,30 +117,7 @@ namespace DataStructureVisualization
             //standard properties and fields in data structures from package
             //Collections to avoid obfuscating the relevant information
             //add names to whitelist to show specific ones hidden by default 
-            _blacklist = new List<string>()
-            {
-                "k__BackingField",
-                "m_value",
-                "_firstChar",
-                "Item",
-                "IsFixedSize",
-                "IsReadOnly",
-                "Capacity",
-                "Count",
-                "IsSynchronized",
-                "SyncRoot",
-                "_items",
-                "_version",
-                "_size",
-                "Comparer",
-                "First",
-                "Last",
-                "Keys",
-                "Values",
-                "_array",
-                "_head_",
-                "_tail"
-            };
+            _blacklist = new List<string>(DefaultBlacklist);
 
             _nodeBuilder = new StringBuilder();
             _edgeBuilder = new StringBuilder();
@@ -120,29 +130,72 @@ namespace DataStructureVisualization
                 foreach (var x in blacklistedMembers)
                     _blacklist.Add(x);
 
-
             var streamWriter = new StreamWriter("vis_" + input.GetType().Name + ".dot");
 
             streamWriter.WriteLine(
                 "//created " + DateTime.Now.ToString("dd/MM/yyyy HH:mm") + " by DataStructureVisualizer (Kastner David)");
 
-            streamWriter.Write(
-                "digraph " + Regex.Replace(input.GetType().Name.ToString(), "`", "") + " {\n rankdir=TB;\n");
+            streamWriter.Write($"digraph DataStructureVisualization {{");
 
-            //begin visualization with input object
-            //todo: add try catch here with exc. handling
-            VisualizeRecursively(null, input, "");
+            //graphviz graph style options
+            streamWriter.Write($"\n\n  graph [" +
+                               $"\n    labelloc = t" +
+                               $"\n    ranksep = 0.3 " +
+                               $"\n    nodesep = 0.4 " +
+                               $"\n    rankdir = TB" +
+                               $"\n    style = \"dotted, filled\"" +
+                               $"\n    fillcolor = \"#FFFFDF\"" +
+                               $"\n  ]");
 
-            //close off structs and graph
-            _nodeBuilder.AppendLine();
-            _nodeBuilder.Replace(System.Environment.NewLine, " } \" ]" + System.Environment.NewLine);
-            streamWriter.WriteLine(_nodeBuilder);
-            streamWriter.Write(_edgeBuilder);
-            streamWriter.WriteLine("}");
+            //graphviz node style options
+            streamWriter.Write($"\n  node [" +
+                               $"\n    colorscheme = \"pastel17\"" +
+                               $"\n    style = \"filled\"" +
+                               $"\n    fillcolor = 2" +
+                               $"\n    shape = record" +
+                               $"\n  ]");
 
-            //flush streamWriter and close file
-            streamWriter.Flush();
-            streamWriter.Close();
+            //legend for user information
+            streamWriter.Write($"\n  subgraph cluster_legend {{" +
+                               $"\n    label = \"Legend\"" +
+                               $"\n    ranksep = 0.5" +
+                               $"\n    nodesep = record" +
+                               $"\n    labelloc = t" +
+                               $"\n    l1 [label=\"IEnumerable\", fillcolor=5]" +
+                               $"\n    l2 [label=\"ValueType\", fillcolor=3]" +
+                               $"\n    l3 [label=\"Object\", fillcolor=2]" +
+                               $"\n  }}");
+
+            //replace symbols for graphviz syntax
+            var graphName = Regex.Replace(Regex.Replace(input.GetType().Name.ToString(),
+                "`", ""),
+                "\\[\\]", "");
+
+            //creating subgraph for the input object
+            streamWriter.Write($"\n\nsubgraph {graphName} {{\n");
+
+
+            try
+            {
+                VisualizeRecursively(null, input, "");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Thrown exc.: {e.GetType().Name} with msg:");
+                Console.WriteLine($"{e.Message}");
+            }
+            finally
+            {
+                //close off structs and graph
+                _nodeBuilder.AppendLine();
+                _nodeBuilder.Replace(System.Environment.NewLine, " } \" ]" + System.Environment.NewLine);
+                streamWriter.WriteLine(_nodeBuilder);
+                streamWriter.Write($"{_edgeBuilder}}}\n}}");
+
+                //flush streamWriter and close file
+                streamWriter.Flush();
+                streamWriter.Close();
+            }
 
         }
 
@@ -176,8 +229,7 @@ namespace DataStructureVisualization
                 return;
             }
 
-            //save all recursive function calls and invoke later to prevent
-            //overriding wrong line
+            //save all recursive function calls and invoke later to prevent overriding wrong line
             var recursiveCalls = new List<Action>();
 
             //get new Id for new struct
@@ -203,13 +255,17 @@ namespace DataStructureVisualization
                                             + innerId);
                 }
 
+
+                source = "0:0";
                 innerId++;
 
                 if (memberObj is string)
                 {
                     _nodeBuilder.Append("struct"
                                         + currId
-                                        + " [shape=record label=\" { "
+                                        + " [shape=record"
+                                        + " fillcolor=5"
+                                        + " label=\" { "
                                         + "<0>"
                                         + memberObj.GetType().Name
                                         + " | <"
@@ -223,7 +279,9 @@ namespace DataStructureVisualization
                 {
                     _nodeBuilder.Append("struct"
                                         + currId
-                                        + " [shape=record label=\" { "
+                                        + " [shape=record"
+                                        + " fillcolor=5"
+                                        + " label=\" { "
                                         + memberObj.GetType().Name
                                         + " | <"
                                         + innerId
@@ -240,7 +298,9 @@ namespace DataStructureVisualization
                     {
                         _nodeBuilder.Append("struct"
                                             + currId
-                                            + " [shape=record label=\" { "
+                                            + " [shape=record "
+                                            + " fillcolor=5 "
+                                            + "label=\" { "
                                             + "<"
                                             + innerId
                                             + ">"
@@ -251,17 +311,21 @@ namespace DataStructureVisualization
                     {
                         _nodeBuilder.Append("struct"
                                             + currId
-                                            + " [shape=record label=\" { "
+                                            + " [shape=record"
+                                            + " fillcolor=5"
+                                            + " label=\" { "
                                             + "<"
                                             + innerId
                                             + ">"
                                             + memberObj.GetType().Name
-                                            + "(∅)");
+                                            + "\\{\\}");
 
+                        return;
 
                     }
 
                     string collectionSource = currId + ":" + innerId;
+
 
                     IterateMembers(memberObj, memberObj.GetType()
                         .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance));
@@ -280,9 +344,12 @@ namespace DataStructureVisualization
 
                         if (entry.GetType().IsValueType)
                         {
+                            _nodeBuilder.AppendLine();
                             _nodeBuilder.Append("struct"
                                                 + currId
-                                                + " [shape=record label=\" { "
+                                                + " [shape=record"
+                                                + " fillcolor=3"
+                                                + " label=\" { "
                                                 + "<"
                                                 + innerId
                                                 + ">"
@@ -291,7 +358,7 @@ namespace DataStructureVisualization
 
                             _edgeBuilder.AppendLine("struct"
                                                     + source
-                                                    + " - "
+                                                    + " -> "
                                                     + "struct"
                                                     + currId
                                                     + ":"
@@ -377,7 +444,6 @@ namespace DataStructureVisualization
                                             + innerId
                                             + "> "
                                             + member.Name
-                                            + "* "
                                             + " ");
 
 

@@ -99,7 +99,7 @@ namespace DataStructureVisualization
 
                 DataStructureVisualizer.Visualize(testQueue, new List<String>() { "_array", "_item" });
             }
-            
+            */
 
             //tests with skip list implementation 
             {
@@ -117,23 +117,8 @@ namespace DataStructureVisualization
                 DataStructureVisualizer.Visualize(testSkipList, testList4, testList41);
             }
             
-            /*
-            //test with Student object
-            {
-                Student testStudent = new Student();
-                StringWrapper[] temp = new StringWrapper[2];
-                temp[0] = new StringWrapper("WS1");
-                temp[1] = new StringWrapper("WS2");
-                testStudent.wrappedStrings = temp;
-                testStudent.wrappedString = new StringWrapper("WS§");
-                testStudent.brother = new Student[]{new Student()};
 
-                List<String> testList5 = new List<String>() {"brother", "content", "kidsList", "kids", "wrappedStrings", "wrappedString", "Info" };
 
-                DataStructureVisualizer.Visualize(testStudent, testList5);
-            }
-            
-            */
             //test with Person object
             {
                 Person herbert = new Person("Herbert", 56);
@@ -153,10 +138,11 @@ namespace DataStructureVisualization
 
                 herbert.friends.Add(alex);
 
-                List<string> WL = new List<string>() {"kids", "Age", "Name", "friends"};
+                List<string> WL = new List<string>() {"Age", "Name", "friends"};
+                List<string> BL = new List<string>() {"kids"};
+                DataStructureVisualizer.Visualize(herbert, WL, BL);
+                //-i made this :)
 
-
-                DataStructureVisualizer.Visualize(herbert, WL);
 
                 DataStructureVisualizer.Visualize(WL);
 
@@ -183,6 +169,12 @@ namespace DataStructureVisualization
                 DataStructureVisualizer.Visualize(testQueue, whitelist );
             }
             */
+
+            int[] testArr = new int[10];
+            for (int i = 0; i < 10; i++) testArr[i] = i;
+
+            DataStructureVisualizer.Visualize(testArr);
+
 
             Console.WriteLine("done");
             Console.ReadLine();
