@@ -1,9 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections;
-using System.Linq;
-using Microsoft.VisualBasic;
-
 
 namespace DataStructureVisualization
 {
@@ -11,17 +7,7 @@ namespace DataStructureVisualization
     {
         static void Main(string[] args)
         {
-
-            //test with collections
-            {
-                Queue<int> q = new Queue<int>();
-                q.Append(1);
-                q.Append(2);
-                q.Append(3);
-                DataStructureVisualizer.Visualize(q);
-            }
-            
-
+           
             //binary tree
             {
                 BinaryTree testTree = new BinaryTree();
@@ -29,31 +15,12 @@ namespace DataStructureVisualization
                 for (int i = 0; i < 50; i++) testTree.Insert(rnd.Next(1, 10000));
                 //testTree.DisplayTree();
 
-                List<String> testList1 = new List<String>() {"Data"};
-                DataStructureVisualizer.Visualize(testTree, testList1);
+                List<String> testWhiteList1 = new List<String>() {"Data"};
+                List<String> testBlackList1 = new List<string>() { "duplicateData" };
+                DataStructureVisualizer.Visualize(testTree, testWhiteList1, testBlackList1);
             }
 
             
-            /*
-            //nodes with data members and left/right references
-            {
-                Node testNode1 = new Node(1);
-                Node testNode2 = new Node(2);
-                testNode1.Left = testNode1;
-                testNode2.Right = testNode1;
-                //test1.visibleNames = new List<String>() { "Alex", "Nico", "Johann" };
-                //test1.hiddenNames = new List<String>() { "name1", "name2", "name3", "name4", "name5" };
-                testNode2.values = new int[3] { 0, 1, 2 };
-                testNode2.Left = testNode1;
-                testNode2.Right = testNode2;
-
-                //DataStructureVisualizer.Visualize(testNode1);
-                //List<String> testList2 = new List<String>() { };
-                //DataStructureVisualizer.Visualize(testNode1, testList2);
-            }
-
-            */
-            /*
             //double linked list for testing
             {
                 DoubleLinkedList testDoubleList = new DoubleLinkedList();
@@ -66,40 +33,8 @@ namespace DataStructureVisualization
                 //DataStructureVisualizer.Visualize(testDoubleList);
                 List<String> testList3 = new List<String>() { "Title" };
                 DataStructureVisualizer.Visualize(testDoubleList, testList3);
-                //DataStructureVisualizer.Visualize(testDoubleList);
-
             }
-            
-            /*
-            
-            //tests with list of nodes as member
-            {
-                Node testNode5 = new Node(0);
-                Node testNode6 = new Node(1);
-                Node testNode7 = new Node(2);
-                Node testNode8 = new Node(3);
-
-                testNode5.nodeList = new List<Node>();
-                testNode5.nodeList.Add(testNode6);
-                testNode5.nodeList.Add(testNode7);
-                testNode5.nodeList.Add(testNode8);
-
-                DataStructureVisualizer.Visualize(testNode5);
-
-            }
-
-
-            //tests with queue from collections
-            {
-                Queue<int> testQueue = new Queue<int>();
-                testQueue.Enqueue(3);
-                testQueue.Enqueue(2);
-                testQueue.Enqueue(1);
-                testQueue.Enqueue(4);
-
-                DataStructureVisualizer.Visualize(testQueue, new List<String>() { "_array", "_item" });
-            }
-            */
+           
 
             //tests with skip list implementation 
             {
@@ -109,11 +44,8 @@ namespace DataStructureVisualization
                 for (int i = 0; i < 2; i++) testSkipList.Add(rnd2.Next(1, 10000));
 
                 List<String> testList4 = new List<String>() {"Levels"};
-
                 List<String> testList41 = new List<string>() { "Value", "value", "Next", "next" };
 
-                //DataStructureVisualizer.Visualize(testSkipList);
-                //DataStructureVisualizer.Visualize(testSkipList, testList4);
                 DataStructureVisualizer.Visualize(testSkipList, testList4, testList41);
             }
             
@@ -139,8 +71,7 @@ namespace DataStructureVisualization
                 herbert.friends.Add(alex);
 
                 List<string> WL = new List<string>() {"Age", "Name", "friends"};
-                List<string> BL = new List<string>() {"kids"};
-                DataStructureVisualizer.Visualize(herbert, WL, BL);
+                DataStructureVisualizer.Visualize(herbert, WL);
                 //-i made this :)
 
 
@@ -148,7 +79,7 @@ namespace DataStructureVisualization
 
             }
 
-            /*
+            
             //test with Collections.List
             {
                 List<int> testlist = new List<int>() { 1, 2, 3, 4, 5, 6, 7, 8 };
@@ -156,24 +87,14 @@ namespace DataStructureVisualization
                 DataStructureVisualizer.Visualize(testlist, whitelist);
             }
 
-
-            //test with Collections.Queue
+            //test with array
             {
-                Queue<int> testQueue = new Queue<int>();
-                testQueue.Enqueue(1);
-                testQueue.Enqueue(2);
-                testQueue.Enqueue(3);
-                testQueue.Enqueue(4);
+                int[] testArr = new int[10];
+                for (int i = 0; i < 10; i++) testArr[i] = i;
 
-                List<string> whitelist = new List<string>() { "_array", "_head", "_tail"};
-                DataStructureVisualizer.Visualize(testQueue, whitelist );
+                DataStructureVisualizer.Visualize(testArr);
+
             }
-            */
-
-            int[] testArr = new int[10];
-            for (int i = 0; i < 10; i++) testArr[i] = i;
-
-            DataStructureVisualizer.Visualize(testArr);
 
 
             Console.WriteLine("done");

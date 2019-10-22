@@ -15,6 +15,8 @@ namespace DataStructureVisualization
 
         public int Data { get; set; }
 
+        public int duplicateData { get; set; }
+
         public Node Left { get; set; }
 
         public Node Right { get; set; }
@@ -22,6 +24,7 @@ namespace DataStructureVisualization
         public Node(int data)
         {
             this.Data = data;
+            this.duplicateData = 10;
         }
     }
 
@@ -177,42 +180,6 @@ namespace DataStructureVisualization
             this.content = s;
         }
     }
-
-    /*
-    class Student
-    {
-        public string Name { get; set; }
-        protected string Info { get; set; }
-        private int Age = 22;
-        public String[] kids = new String[] { "alex", "nico", "felix" };
-        public int[] kidsAges { get; set; }
-        public void getAge()
-        {
-            Console.WriteLine("Age: " + Age);
-        }
-
-        public Student[] brother;
-
-        //[ShowData]
-        public StringWrapper[] wrappedStrings;
-        public StringWrapper wrappedString;
-
-        public List<String> kidsList = new List<String>();
-
-        public Student()
-        {
-            Info = "initialized";
-            kidsList.Add("Nico");
-            kidsList.Add("Alex");
-            kidsList.Add("Felix");
-            kidsList.Add("Elisabeth");
-            kidsList.Add("Hansi");
-            kidsList.Add("Dani");
-            kidsAges = new int[] { 1, 2, 4 };
-        }
-
-    }
-    */
 
     class Person
     {
