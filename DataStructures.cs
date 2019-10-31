@@ -205,8 +205,22 @@ namespace DataStructureVisualization
     //| Visual C# Kicks - http://vckicks.110mb.com/      |
     //| License - http://vckicks.110mb.com/license.html  |
     //====================================================
+
+
     namespace CSKicksCollection
     {
+        public class Wrapper<T>
+        {
+            private T InternalObj { get; set; }
+
+            public Wrapper(T sl)
+            {
+                InternalObj = sl;
+            }
+
+        }
+
+
         /// <summary>
         /// The basic data block of a Skip List
         /// </summary>
