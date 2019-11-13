@@ -333,43 +333,70 @@ namespace DataStructureVisualization
                     IterateMembers(memberObj, memberObj.GetType()
                         .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance));
 
-
-                    foreach (var entry in memberObj)
+                    if (memberObj.GetType().isArray)
                     {
-                        if (entry == null) continue;
-
+                        if (memberObj.Count == 0) return;
                         currId = GetId();
                         innerId = 0;
+                        _nodeBuilder.AppendLine();
+                        _nodeBuilder.Append("struct"
+                                            + currId
+                                            + " [shape=record"
+                                            + " fillcolor=3"
+                                            + " label=\" { ");
 
-
-                        if (entry.GetType().IsValueType)
+                        foreach (var entry in memberObj)
                         {
-                            _nodeBuilder.AppendLine();
-                            _nodeBuilder.Append("struct"
-                                                + currId
-                                                + " [shape=record"
-                                                + " fillcolor=3"
-                                                + " label=\" { "
-                                                + "<"
-                                                + innerId
-                                                + ">"
-                                                + entry
-                                                + " ");
+                            if //append every indexs here
+                            _nodeBuilder.Append("")
 
-                            _edgeBuilder.AppendLine("struct"
-                                                    + source
-                                                    + " -> "
-                                                    + "struct"
-                                                    + currId
-                                                    + ":"
-                                                    + innerId);
+
+                            //somethign like this
+                                recursiveCalls.Add(new Action(() =>
+                                    VisualizeRecursively(null, entry, collectionSource)));
+
                         }
-                        else
+
+
+                    }
+                    else //is list or some sort of other enumerable
+                    {
+
+                        foreach (var entry in memberObj)
                         {
+                            if (entry == null) continue;
+                            currId = GetId();
+                            innerId = 0;
 
-                            recursiveCalls.Add(new Action(() =>
-                                VisualizeRecursively(null, entry, collectionSource)));
+                            if (entry.GetType().IsValueType)
+                            {
+                                _nodeBuilder.AppendLine();
+                                _nodeBuilder.Append("struct"
+                                                    + currId
+                                                    + " [shape=record"
+                                                    + " fillcolor=3"
+                                                    + " label=\" { "
+                                                    + "<"
+                                                    + innerId
+                                                    + ">"
+                                                    + entry
+                                                    + " ");
 
+                                _edgeBuilder.AppendLine("struct"
+                                                        + source
+                                                        + " -> "
+                                                        + "struct"
+                                                        + currId
+                                                        + ":"
+                                                        + innerId);
+                            }
+                            else
+                            {
+
+                                recursiveCalls.Add(new Action(() =>
+                                    VisualizeRecursively(null, entry, collectionSource)));
+
+                            }
                         }
                     }
                 }
