@@ -357,17 +357,22 @@ namespace DataStructureVisualization
                         foreach (var entry in memberObj)
                         {
                             if (innerId > 0) _nodeBuilder.Append(" | ");
-                            _nodeBuilder.Append("<" + innerId + "> " + innerId);
 
-
-                            recursiveCalls.Add(new Action(() =>
-                                    VisualizeRecursively(null, entry, currId + ":" + innerId)));
+                            if (entry.GetType.IsValueType)
+                            {
+                                _nodeBuilder.Append("<" + innerId + "> " + entry);
+                            }
+                            else
+                            {
+                                _nodeBuilder.Append("<" + innerId + "> " + innerId);
+                                recursiveCalls.Add(new Action(() =>
+                                        VisualizeRecursively(null, entry, currId + ":" + innerId)));
+                            }
 
                             innerId++;
                         }
 
                         _nodeBuilder.Append("}");
-
 
                     }
                     else //is list or some sort of other enumerable
