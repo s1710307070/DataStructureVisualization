@@ -337,25 +337,36 @@ namespace DataStructureVisualization
                     {
                         if (memberObj.Count == 0) return;
                         currId = GetId();
+
+                        _edgeBuilder.AppendLine("struct"
+                                                + source
+                                                + " -> "
+                                                + "struct"
+                                                + currId
+                                                + ":"
+                                                + innerId);
+
                         innerId = 0;
                         _nodeBuilder.AppendLine();
                         _nodeBuilder.Append("struct"
                                             + currId
                                             + " [shape=record"
                                             + " fillcolor=3"
-                                            + " label=\" { ");
+                                            + " label=\" ");
 
                         foreach (var entry in memberObj)
                         {
-                            if //append every indexs here
-                            _nodeBuilder.Append("")
+                            if (innerId > 0) _nodeBuilder.Append(" | ");
+                            _nodeBuilder.Append("<" + innerId + "> " + innerId);
 
 
-                            //somethign like this
-                                recursiveCalls.Add(new Action(() =>
-                                    VisualizeRecursively(null, entry, collectionSource)));
+                            recursiveCalls.Add(new Action(() =>
+                                    VisualizeRecursively(null, entry, currId + ":" + innerId)));
 
+                            innerId++;
                         }
+
+                        _nodeBuilder.Append("}");
 
 
                     }
