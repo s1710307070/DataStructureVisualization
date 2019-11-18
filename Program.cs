@@ -44,10 +44,12 @@ namespace DataStructureVisualization
                 Random rnd2 = new Random();
                 for (int i = 0; i < 2; i++) testSkipList.Add(rnd2.Next(1, 10000));
 
-                List<String> testList4 = new List<String>() {"Levels"};
-                List<String> testList41 = new List<string>() { "Value", "value", "Next", "next" };
+                var SLWrapper = new CSKicksCollection.Wrapper<CSKicksCollection.SkipList<int>>(testSkipList);
 
-                DataStructureVisualizer.Visualize(testSkipList, testList4, testList41);
+                List<String> testWL1 = new List<String>() {"Levels"};
+                List<String> testBL1 = new List<string>() {"maxLevels", "Value", "value", "Next", "next" };
+
+                DataStructureVisualizer.Visualize(SLWrapper, testWL1, testBL1);
             }
             
 
@@ -80,6 +82,31 @@ namespace DataStructureVisualization
 
             }
 
+            //test with queue
+            {
+                Queue<Person> testQueue = new Queue<Person>();
+
+                var hans = new Person("Hans", 22);
+                var david = new Person("David", 22);
+                var felix = new Person("Felix", 21);
+                var susi = new Person("Susi", 20);
+                hans.Spouse = susi;
+                susi.friends.Add(david);
+                susi.friends.Add(felix);
+                david.friends.Add(felix);
+                david.friends.Add(hans);
+                david.friends.Add(susi);
+
+
+                testQueue.Enqueue(david);
+                testQueue.Enqueue(felix);
+                testQueue.Enqueue(hans);
+
+
+                List<string> queueWL = new List<string>() { "_array" };
+                DataStructureVisualizer.Visualize(testQueue);
+
+            }
             
             //test with Collections.List
             {

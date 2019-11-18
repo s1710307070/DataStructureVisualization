@@ -30,17 +30,17 @@ namespace DataStructureVisualization
             "Count",
             "IsSynchronized",
             "SyncRoot",
+            "_array",
             "_items",
             "_version",
             "_size",
+            "_head",
+            "_tail",
             "Comparer",
             "First",
             "Last",
             "Keys",
             "Values",
-            "_array",
-            "_head_",
-            "_tail",
             "length",
             "LongLength",
             "Rank"
@@ -333,43 +333,86 @@ namespace DataStructureVisualization
                     IterateMembers(memberObj, memberObj.GetType()
                         .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance));
 
-
-                    foreach (var entry in memberObj)
+                    if (memberObj.GetType().isArray)
                     {
-                        if (entry == null) continue;
-
+                        if (memberObj.Count == 0) return;
                         currId = GetId();
-                        innerId = 0;
 
-
-                        if (entry.GetType().IsValueType)
-                        {
-                            _nodeBuilder.AppendLine();
-                            _nodeBuilder.Append("struct"
+                        _edgeBuilder.AppendLine("struct"
+                                                + source
+                                                + " -> "
+                                                + "struct"
                                                 + currId
-                                                + " [shape=record"
-                                                + " fillcolor=3"
-                                                + " label=\" { "
-                                                + "<"
-                                                + innerId
-                                                + ">"
-                                                + entry
-                                                + " ");
+                                                + ":"
+                                                + innerId);
 
-                            _edgeBuilder.AppendLine("struct"
-                                                    + source
-                                                    + " -> "
-                                                    + "struct"
-                                                    + currId
-                                                    + ":"
-                                                    + innerId);
-                        }
-                        else
+                        innerId = 0;
+                        _nodeBuilder.AppendLine();
+                        _nodeBuilder.Append("struct"
+                                            + currId
+                                            + " [shape=record"
+                                            + " fillcolor=3"
+                                            + " label=\" ");
+
+                        foreach (var entry in memberObj)
                         {
+                            if (innerId > 0) _nodeBuilder.Append(" | ");
 
-                            recursiveCalls.Add(new Action(() =>
-                                VisualizeRecursively(null, entry, collectionSource)));
+                            if (entry.GetType.IsValueType)
+                            {
+                                _nodeBuilder.Append("<" + innerId + "> " + entry);
+                            }
+                            else
+                            {
+                                _nodeBuilder.Append("<" + innerId + "> " + innerId);
+                                recursiveCalls.Add(new Action(() =>
+                                        VisualizeRecursively(null, entry, currId + ":" + innerId)));
+                            }
 
+                            innerId++;
+                        }
+
+                        _nodeBuilder.Append("}");
+
+                    }
+                    else //is list or some sort of other enumerable
+                    {
+
+                        foreach (var entry in memberObj)
+                        {
+                            if (entry == null) continue;
+                            currId = GetId();
+                            innerId = 0;
+
+                            if (entry.GetType().IsValueType)
+                            {
+                                _nodeBuilder.AppendLine();
+                                _nodeBuilder.Append("struct"
+                                                    + currId
+                                                    + " [shape=record"
+                                                    + " fillcolor=3"
+                                                    + " label=\" { "
+                                                    + "<"
+                                                    + innerId
+                                                    + ">"
+                                                    + entry
+                                                    + " ");
+
+                                _edgeBuilder.AppendLine("struct"
+                                                        + source
+                                                        + " -> "
+                                                        + "struct"
+                                                        + currId
+                                                        + ":"
+                                                        + innerId);
+                            }
+                            else
+                            {
+
+                                recursiveCalls.Add(new Action(() =>
+                                    VisualizeRecursively(null, entry, collectionSource)));
+
+                            }
                         }
                     }
                 }
