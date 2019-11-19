@@ -73,11 +73,14 @@ namespace DataStructureVisualization
 
                 herbert.friends.Add(alex);
 
-                List<string> WL = new List<string>() {"Age", "Name", "friends"};
-                DataStructureVisualizer.Visualize(herbert, WL);
-                //-i made this :)
+                Person testPerson = new Person("David", 22);
 
-                DataStructureVisualizer.Visualize(WL);
+                IEnumerable<string> whiteList = new List<string>() {"Age", "Name", "friends"};
+                IEnumerable<string> blackList = new List<string>() { "friends" };
+                DataStructureVisualizer.Visualize(testPerson);
+                DataStructureVisualizer.Visualize(testPerson, whiteList);
+                DataStructureVisualizer.Visualize(testPerson, whiteList, blackList);
+
 
                 PersonDB personDB = new PersonDB();
                 personDB.Data = new Person[3];

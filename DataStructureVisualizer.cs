@@ -199,7 +199,7 @@ namespace DataStructureVisualization
         /// <param name="input">object to which the member belongs</param>
         /// <param name="component">member to be handled in this method call</param>
         /// <param name="source">contains the source node and specific struct item (123:3) as string</param>"
-        private static void VisualizeRecursively(dynamic input, dynamic component, string source)
+        private static void VisualizeRecursively(object input, dynamic component, string source)
         {
 
             //the actual object if behind a property/field
@@ -212,11 +212,7 @@ namespace DataStructureVisualization
             //object has been processed and struct drawn already
             if (_processedNodes.TryGetValue(memberObj, out string processedNode))
             {
-                _edgeBuilder.AppendLine("struct"
-                                        + source
-                                        + " -> "
-                                        + "struct"
-                                        + processedNode);
+                _edgeBuilder.AppendLine($"struct{source} -> struct{processedNode}");
                 return;
             }
 
@@ -237,13 +233,7 @@ namespace DataStructureVisualization
                 if (source != "")
                 {
                     _nodeBuilder.AppendLine();
-                    _edgeBuilder.AppendLine("struct"
-                                            + source
-                                            + " -> "
-                                            + "struct"
-                                            + currId
-                                            + ":"
-                                            + innerId);
+                    _edgeBuilder.AppendLine($"struct{source} -> struct{currId}:{innerId}");
                 }
 
                 source = "0:0";
@@ -251,25 +241,14 @@ namespace DataStructureVisualization
 
                 if (memberObj is string)
                 {
-                    _nodeBuilder.Append("struct"
-                                        + currId
-                                        + " [shape=record"
-                                        + " fillcolor=5"
-                                        + " label=\" { "
-                                        + "<0>"
-                                        + memberObj.GetType().Name
-                                        + " | <"
-                                        + innerId
-                                        + "> "
-                                        + memberObj
-                                        + " ");
+                    _nodeBuilder.Append($"struct{currId} [shape=record fillcolor=5 label=\" {{ " +
+                        $"<0> {memberObj.GetType().Name} | < {innerId} > {memberObj} ");
 
                 }
                 else if (input != null && !_whitelist.Contains(component.Name))
                 {
                     _nodeBuilder.Append($"struct{currId} [shape=record fillcolor=5 label=\" {{ " +
                                         $"{memberObj.GetType().Name} | < {innerId} > ... ");
-
                 }
                 else
                 {
@@ -277,8 +256,6 @@ namespace DataStructureVisualization
                     var enumerator = ((IEnumerable)memberObj).GetEnumerator();
                     if (enumerator.MoveNext())
                     {
-
-                        //dont do this if its an array
                         _nodeBuilder.Append($"struct{currId} [shape=record  fillcolor=5 label=\" {{ " +
                                             $"<{innerId}> {memberObj.GetType().Name} ");
                     }
@@ -290,7 +267,6 @@ namespace DataStructureVisualization
                     }
 
                     string collectionSource = currId + ":" + innerId;
-
 
                     IterateMembers(memberObj, memberObj.GetType()
                         .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance));
@@ -412,7 +388,7 @@ namespace DataStructureVisualization
             }
 
             //Properties and fields have the same methods, generalized in this local function
-            void IterateMembers(dynamic sourceObject, IEnumerable<MemberInfo> unspecificMembers)
+            void IterateMembers(object sourceObject, IEnumerable<MemberInfo> unspecificMembers)
             {
                 foreach (var unspecificMember in unspecificMembers)
                 {
@@ -509,7 +485,7 @@ namespace DataStructureVisualization
                 }
             }
 
-            //invoke all recursive calls for this layer
+            //invoke all recursive calls for this level
             foreach (var call in recursiveCalls) call.Invoke();
 
         }
