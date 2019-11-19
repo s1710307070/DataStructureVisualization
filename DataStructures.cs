@@ -82,6 +82,13 @@ namespace DataStructureVisualization
 
     }
 
+    class PersonDB
+    {
+        private int personCount = 5;
+        public Person[] Data { get; set; }
+    }
+
+
     //from https://yetanotherchris.dev/csharp/linked-list-and-double-linked-list-in-csharp/
     public class DoubleLink
     {

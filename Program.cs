@@ -77,8 +77,15 @@ namespace DataStructureVisualization
                 DataStructureVisualizer.Visualize(herbert, WL);
                 //-i made this :)
 
-
                 DataStructureVisualizer.Visualize(WL);
+
+                PersonDB personDB = new PersonDB();
+                personDB.Data = new Person[3];
+                personDB.Data[0] = herbert;
+                personDB.Data[1] = alex;
+                personDB.Data[2] = nico;
+
+                DataStructureVisualizer.Visualize(personDB);
 
             }
 
@@ -123,6 +130,8 @@ namespace DataStructureVisualization
                 DataStructureVisualizer.Visualize(testArr);
 
             }
+
+
 
 
             Console.WriteLine("done");
