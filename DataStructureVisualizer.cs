@@ -303,8 +303,6 @@ namespace DataStructureVisualization
 
                                 recursiveCalls.Add(new Action(() =>
                                         VisualizeRecursively(null, entry, newSource)));
-
-                                Console.WriteLine(innerId);
                             }
 
                             innerId++;
@@ -325,31 +323,15 @@ namespace DataStructureVisualization
                             if (entry.GetType().IsValueType)
                             {
                                 _nodeBuilder.AppendLine();
-                                _nodeBuilder.Append("struct"
-                                                    + currId
-                                                    + " [shape=record"
-                                                    + " fillcolor=3"
-                                                    + " label=\" { "
-                                                    + "<"
-                                                    + innerId
-                                                    + ">"
-                                                    + entry
-                                                    + " ");
+                                _nodeBuilder.Append($"struct{currId} [shape=record fillcolor=3 label=\" {{ " +
+                                                    $"<{innerId}> {entry} ");
 
-                                _edgeBuilder.AppendLine("struct"
-                                                        + source
-                                                        + " -> "
-                                                        + "struct"
-                                                        + currId
-                                                        + ":"
-                                                        + innerId);
+                                _edgeBuilder.AppendLine($"struct{source} -> struct{currId}:{innerId}");
                             }
                             else
                             {
-
                                 recursiveCalls.Add(new Action(() =>
                                     VisualizeRecursively(null, entry, collectionSource)));
-
                             }
                         }
                     }
@@ -358,28 +340,15 @@ namespace DataStructureVisualization
             else
             {
                 if (currId > 0) _nodeBuilder.AppendLine();
-                _nodeBuilder.Append("struct"
-                                    + currId
-                                    + " [shape=record label=\" { "
-                                    + "<0>"
-                                    + memberObj.GetType().Name
-                                    + " ");
-
-
+                _nodeBuilder.Append($"struct{currId} [shape=record label=\" {{ <0> {memberObj.GetType().Name} ");
 
                 //create an edge coming from it's reference variable
                 if (source != "")
                 {
-                    _edgeBuilder.AppendLine("struct"
-                                            + source
-                                            + " -> "
-                                            + "struct"
-                                            + currId
-                                            + ":0 ");
+                    _edgeBuilder.AppendLine($"struct{source} -> struct{currId}:0 ");
                 }
 
-
-                //get all public/private/... member and handle them
+                //iterate all properties and fields of this object
                 IterateMembers(memberObj, memberObj.GetType()
                     .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance));
 
@@ -413,81 +382,47 @@ namespace DataStructureVisualization
                     }
 
                     if (skipMember) continue;
-
                     innerId++;
 
-                    //to draw the edge from later on
                     string destination = new string(currId + ":" + innerId);
 
                     if (member.GetValue(sourceObject) is IEnumerable)
                     {
-                        _nodeBuilder.Append("| <"
-                                            + innerId
-                                            + "> "
-                                            + member.Name
-                                            + " ");
+                        _nodeBuilder.Append($"| <{innerId}> {member.Name} ");
 
-
-                        //if (member.GetValue(sourceObject) is string)
-                        {
-                            recursiveCalls.Add(new Action(() =>
-                                VisualizeRecursively(null, member.GetValue(sourceObject), destination)));
-                        }
-
+                        recursiveCalls.Add(new Action(() =>
+                            VisualizeRecursively(null, member.GetValue(sourceObject), destination)));
 
                     }
+
                     //object behind member is null, create entry but don't follow it up
                     else if (member.GetValue(sourceObject) == null)
                     {
-                        _nodeBuilder.Append("| <"
-                                            + innerId
-                                            + "> "
-                                            + member.Name
-                                            + " (∅) ");
-
+                        _nodeBuilder.Append($"| <{innerId}> {member.Name} (∅) ");
                     }
                     else if (member.GetValue(sourceObject).GetType().IsValueType)
                     {
-
                         if (_whitelist.Contains(member.Name))
                         {
-                            _nodeBuilder.Append("| <"
-                                                + innerId
-                                                + "> "
-                                                + member.Name
-                                                + ": "
-                                                + member.GetValue(sourceObject)
-                                                + " ");
+                            _nodeBuilder.Append($"| <{innerId}> {member.Name}: {member.GetValue(sourceObject)} ");
                         }
                         else
                         {
-                            _nodeBuilder.Append("| <"
-                                                + innerId
-                                                + "> "
-                                                + member.Name
-                                                + " ");
+                            _nodeBuilder.Append($"| <{innerId}> {member.Name} ");
                         }
-
                     }
                     //reference type
                     else
                     {
-                        _nodeBuilder.Append("| <"
-                                            + innerId
-                                            + "> "
-                                            + member.Name
-                                            + " ");
-
+                        _nodeBuilder.Append($"| <{innerId}> {member.Name} ");
 
                         recursiveCalls.Add(new Action(() =>
                             VisualizeRecursively(sourceObject, member, destination)));
                     }
                 }
             }
-
             //invoke all recursive calls for this level
             foreach (var call in recursiveCalls) call.Invoke();
-
         }
     }
 
