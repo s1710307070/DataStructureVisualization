@@ -41,7 +41,7 @@ namespace DataStructureVisualization
             "Last",
             "Keys",
             "Values",
-            "length",
+            "Length",
             "LongLength",
             "Rank"
         };
@@ -88,50 +88,9 @@ namespace DataStructureVisualization
             return DefaultBlacklist;
         }
 
-        /// <summary>
-        /// Visualize data structure of 'input'. Include all members recursively except
-        /// for certain properties and backing fields obscuring the relevant information.
-        /// Does not show values of members in the data structure except for those
-        /// specifically named (case sensitive) in 'whitelistedMembers. Ignores members
-        /// containing blacklisted substrings.
-        /// </summary>
-        /// <param name="input">object to be visualized</param>
-        /// <param name="whitelistedMembers">members named in whitelist will display values</param>
-        /// <param name="blacklistedMembers">members containing blacklisted substrings will be ignored</param>
-        public static void Visualize(
-            dynamic input,
-            IEnumerable<string> whitelistedMembers = null,
-            IEnumerable<string> blacklistedMembers = null)
+
+        private static void InitilizeTemplateFile(StreamWriter streamWriter, string inputName)
         {
-            //passed a null object to visualize
-            if (input == null) throw new ArgumentNullException(nameof(input));
-
-            //Initialize static members
-            //static members documented at declaration
-
-            _internalNodeId = 0;
-            _processedNodes = new Dictionary<object, string>();
-
-            _whitelist = new List<string>();
-
-            //standard properties and fields in data structures from package
-            //Collections to avoid obfuscating the relevant information
-            //add names to whitelist to show specific ones hidden by default 
-            _blacklist = new List<string>(DefaultBlacklist);
-
-            _nodeBuilder = new StringBuilder();
-            _edgeBuilder = new StringBuilder();
-
-            if (whitelistedMembers != null)
-                foreach (var x in whitelistedMembers)
-                    _whitelist.Add(x);
-
-            if (blacklistedMembers != null)
-                foreach (var x in blacklistedMembers)
-                    _blacklist.Add(x);
-
-            var streamWriter = new StreamWriter("vis_" + input.GetType().Name + ".dot");
-
             streamWriter.WriteLine(
                 "//created " + DateTime.Now.ToString("dd/MM/yyyy HH:mm") + " by DataStructureVisualizer (Kastner David)");
 
@@ -167,13 +126,47 @@ namespace DataStructureVisualization
                                $"\n  }}");
 
             //replace symbols for graphviz syntax
-            var graphName = Regex.Replace(Regex.Replace(input.GetType().Name.ToString(),
+            var graphName = Regex.Replace(Regex.Replace(inputName,
                 "`", ""),
                 "\\[\\]", "");
 
             //creating subgraph for the input object
             streamWriter.Write($"\n\nsubgraph {graphName} {{\n");
 
+        }
+
+        /// <summary>
+        /// Visualize data structure of 'input'. Include all members recursively except
+        /// for certain properties and backing fields obscuring the relevant information.
+        /// Does not show values of members in the data structure except for those
+        /// specifically named (case sensitive) in 'whitelistedMembers. Ignores members
+        /// containing blacklisted substrings.
+        /// </summary>
+        /// <param name="input">object to be visualized</param>
+        /// <param name="whitelistedMembers">members named in whitelist will display values</param>
+        /// <param name="blacklistedMembers">members containing blacklisted substrings will be ignored</param>
+        public static void Visualize(dynamic input,
+                                     IEnumerable<string> whitelistedMembers = null,
+                                     IEnumerable<string> blacklistedMembers = null)
+        {
+            if (input == null) throw new ArgumentNullException(nameof(input));
+
+            //Initialize static members
+            _internalNodeId = 0;
+            _processedNodes = new Dictionary<object, string>();
+            _whitelist = new List<string>();
+            _blacklist = new List<string>(DefaultBlacklist);
+            _nodeBuilder = new StringBuilder();
+            _edgeBuilder = new StringBuilder();
+
+            if (whitelistedMembers != null)
+                foreach (var x in whitelistedMembers) _whitelist.Add(x);
+
+            if (blacklistedMembers != null) 
+                foreach (var x in blacklistedMembers) _blacklist.Add(x);
+
+            var streamWriter = new StreamWriter("vis_" + input.GetType().Name + ".dot");
+            InitilizeTemplateFile(streamWriter, input.GetType().Name.ToString());
 
             try
             {
@@ -181,23 +174,21 @@ namespace DataStructureVisualization
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Thrown exc.: {e.GetType().Name} with msg:");
-                Console.WriteLine($"{e.Message}");
+                Console.WriteLine($"Thrown exc.: {e.GetType().Name} with msg: {e.Message}");
             }
             finally
             {
-                //close off structs and graph
+                //Close off structs and graph with "}"
                 _nodeBuilder.AppendLine();
                 _nodeBuilder.Replace(System.Environment.NewLine, " } \" ]" + System.Environment.NewLine);
                 streamWriter.WriteLine(_nodeBuilder);
                 streamWriter.Write($"{_edgeBuilder}}}\n}}");
 
-                //flush streamWriter and close file
                 streamWriter.Flush();
                 streamWriter.Close();
             }
-
         }
+
 
         /// <summary>
         /// Inspect all properties and fields in object 'input' and calls this method again for every
@@ -208,7 +199,7 @@ namespace DataStructureVisualization
         /// <param name="input">object to which the member belongs</param>
         /// <param name="component">member to be handled in this method call</param>
         /// <param name="source">contains the source node and specific struct item (123:3) as string</param>"
-        private static void VisualizeRecursively(dynamic input, dynamic component, string source)
+        private static void VisualizeRecursively(object input, dynamic component, string source)
         {
 
             //the actual object if behind a property/field
@@ -221,11 +212,7 @@ namespace DataStructureVisualization
             //object has been processed and struct drawn already
             if (_processedNodes.TryGetValue(memberObj, out string processedNode))
             {
-                _edgeBuilder.AppendLine("struct"
-                                        + source
-                                        + " -> "
-                                        + "struct"
-                                        + processedNode);
+                _edgeBuilder.AppendLine($"struct{source} -> struct{processedNode}");
                 return;
             }
 
@@ -246,49 +233,22 @@ namespace DataStructureVisualization
                 if (source != "")
                 {
                     _nodeBuilder.AppendLine();
-                    _edgeBuilder.AppendLine("struct"
-                                            + source
-                                            + " -> "
-                                            + "struct"
-                                            + currId
-                                            + ":"
-                                            + innerId);
+                    _edgeBuilder.AppendLine($"struct{source} -> struct{currId}:{innerId}");
                 }
-
 
                 source = "0:0";
                 innerId++;
 
                 if (memberObj is string)
                 {
-                    _nodeBuilder.Append("struct"
-                                        + currId
-                                        + " [shape=record"
-                                        + " fillcolor=5"
-                                        + " label=\" { "
-                                        + "<0>"
-                                        + memberObj.GetType().Name
-                                        + " | <"
-                                        + innerId
-                                        + "> "
-                                        + memberObj
-                                        + " ");
+                    _nodeBuilder.Append($"struct{currId} [shape=record fillcolor=5 label=\" {{ " +
+                        $"<0> {memberObj.GetType().Name} | < {innerId} > {memberObj} ");
 
                 }
                 else if (input != null && !_whitelist.Contains(component.Name))
                 {
-                    _nodeBuilder.Append("struct"
-                                        + currId
-                                        + " [shape=record"
-                                        + " fillcolor=5"
-                                        + " label=\" { "
-                                        + memberObj.GetType().Name
-                                        + " | <"
-                                        + innerId
-                                        + ">"
-                                        + "..."
-                                        + " ");
-
+                    _nodeBuilder.Append($"struct{currId} [shape=record fillcolor=5 label=\" {{ " +
+                                        $"{memberObj.GetType().Name} | < {innerId} > ... ");
                 }
                 else
                 {
@@ -296,36 +256,17 @@ namespace DataStructureVisualization
                     var enumerator = ((IEnumerable)memberObj).GetEnumerator();
                     if (enumerator.MoveNext())
                     {
-                        _nodeBuilder.Append("struct"
-                                            + currId
-                                            + " [shape=record "
-                                            + " fillcolor=5 "
-                                            + "label=\" { "
-                                            + "<"
-                                            + innerId
-                                            + ">"
-                                            + memberObj.GetType().Name
-                                            + " ");
+                        _nodeBuilder.Append($"struct{currId} [shape=record  fillcolor=5 label=\" {{ " +
+                                            $"<{innerId}> {memberObj.GetType().Name} ");
                     }
                     else
                     {
-                        _nodeBuilder.Append("struct"
-                                            + currId
-                                            + " [shape=record"
-                                            + " fillcolor=5"
-                                            + " label=\" { "
-                                            + "<"
-                                            + innerId
-                                            + ">"
-                                            + memberObj.GetType().Name
-                                            + "\\{\\}");
-
+                        _nodeBuilder.Append($"struct{currId} [shape=record fillcolor=5 label=\" {{ " +
+                                            $"<{innerId}> {memberObj.GetType().Name} \\{{\\}}");
                         return;
-
                     }
 
                     string collectionSource = currId + ":" + innerId;
-
 
                     IterateMembers(memberObj, memberObj.GetType()
                         .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance));
@@ -333,40 +274,35 @@ namespace DataStructureVisualization
                     IterateMembers(memberObj, memberObj.GetType()
                         .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance));
 
-                    if (memberObj.GetType().isArray)
+                    if (memberObj.GetType().IsArray)
                     {
-                        if (memberObj.Count == 0) return;
+                        int arrayColour = 2;
+                        if (memberObj[0] != null && memberObj[0].GetType().IsValueType) arrayColour = 3;
+                        if (memberObj.Length == 0) return;
                         currId = GetId();
-
-                        _edgeBuilder.AppendLine("struct"
-                                                + source
-                                                + " -> "
-                                                + "struct"
-                                                + currId
-                                                + ":"
-                                                + innerId);
-
                         innerId = 0;
+
+                        _edgeBuilder.AppendLine($"struct{collectionSource} -> struct{currId}:{innerId}");
+
                         _nodeBuilder.AppendLine();
-                        _nodeBuilder.Append("struct"
-                                            + currId
-                                            + " [shape=record"
-                                            + " fillcolor=3"
-                                            + " label=\" ");
+                        _nodeBuilder.Append($"struct{currId} [shape=record fillcolor={arrayColour} label=\" ");
 
                         foreach (var entry in memberObj)
                         {
+                            string newSource = "";
                             if (innerId > 0) _nodeBuilder.Append(" | ");
 
-                            if (entry.GetType.IsValueType)
+                            if (entry.GetType().IsValueType)
                             {
                                 _nodeBuilder.Append("<" + innerId + "> " + entry);
                             }
                             else
                             {
                                 _nodeBuilder.Append("<" + innerId + "> " + innerId);
+                                newSource = currId + ":" + innerId;
+
                                 recursiveCalls.Add(new Action(() =>
-                                        VisualizeRecursively(null, entry, currId + ":" + innerId)));
+                                        VisualizeRecursively(null, entry, newSource)));
                             }
 
                             innerId++;
@@ -375,7 +311,7 @@ namespace DataStructureVisualization
                         _nodeBuilder.Append("}");
 
                     }
-                    else //is list or some sort of other enumerable
+                    else //is list or some other kind of enumerable
                     {
 
                         foreach (var entry in memberObj)
@@ -387,31 +323,15 @@ namespace DataStructureVisualization
                             if (entry.GetType().IsValueType)
                             {
                                 _nodeBuilder.AppendLine();
-                                _nodeBuilder.Append("struct"
-                                                    + currId
-                                                    + " [shape=record"
-                                                    + " fillcolor=3"
-                                                    + " label=\" { "
-                                                    + "<"
-                                                    + innerId
-                                                    + ">"
-                                                    + entry
-                                                    + " ");
+                                _nodeBuilder.Append($"struct{currId} [shape=record fillcolor=3 label=\" {{ " +
+                                                    $"<{innerId}> {entry} ");
 
-                                _edgeBuilder.AppendLine("struct"
-                                                        + source
-                                                        + " -> "
-                                                        + "struct"
-                                                        + currId
-                                                        + ":"
-                                                        + innerId);
+                                _edgeBuilder.AppendLine($"struct{source} -> struct{currId}:{innerId}");
                             }
                             else
                             {
-
                                 recursiveCalls.Add(new Action(() =>
                                     VisualizeRecursively(null, entry, collectionSource)));
-
                             }
                         }
                     }
@@ -420,28 +340,15 @@ namespace DataStructureVisualization
             else
             {
                 if (currId > 0) _nodeBuilder.AppendLine();
-                _nodeBuilder.Append("struct"
-                                    + currId
-                                    + " [shape=record label=\" { "
-                                    + "<0>"
-                                    + memberObj.GetType().Name
-                                    + " ");
-
-
+                _nodeBuilder.Append($"struct{currId} [shape=record label=\" {{ <0> {memberObj.GetType().Name} ");
 
                 //create an edge coming from it's reference variable
                 if (source != "")
                 {
-                    _edgeBuilder.AppendLine("struct"
-                                            + source
-                                            + " -> "
-                                            + "struct"
-                                            + currId
-                                            + ":0 ");
+                    _edgeBuilder.AppendLine($"struct{source} -> struct{currId}:0 ");
                 }
 
-
-                //get all public/private/... member and handle them
+                //iterate all properties and fields of this object
                 IterateMembers(memberObj, memberObj.GetType()
                     .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance));
 
@@ -450,7 +357,7 @@ namespace DataStructureVisualization
             }
 
             //Properties and fields have the same methods, generalized in this local function
-            void IterateMembers(dynamic sourceObject, IEnumerable<MemberInfo> unspecificMembers)
+            void IterateMembers(object sourceObject, IEnumerable<MemberInfo> unspecificMembers)
             {
                 foreach (var unspecificMember in unspecificMembers)
                 {
@@ -475,81 +382,47 @@ namespace DataStructureVisualization
                     }
 
                     if (skipMember) continue;
-
                     innerId++;
 
-                    //to draw the edge from later on
                     string destination = new string(currId + ":" + innerId);
 
                     if (member.GetValue(sourceObject) is IEnumerable)
                     {
-                        _nodeBuilder.Append("| <"
-                                            + innerId
-                                            + "> "
-                                            + member.Name
-                                            + " ");
+                        _nodeBuilder.Append($"| <{innerId}> {member.Name} ");
 
-
-                        //if (member.GetValue(sourceObject) is string)
-                        {
-                            recursiveCalls.Add(new Action(() =>
-                                VisualizeRecursively(null, member.GetValue(sourceObject), destination)));
-                        }
-
+                        recursiveCalls.Add(new Action(() =>
+                            VisualizeRecursively(null, member.GetValue(sourceObject), destination)));
 
                     }
+
                     //object behind member is null, create entry but don't follow it up
                     else if (member.GetValue(sourceObject) == null)
                     {
-                        _nodeBuilder.Append("| <"
-                                            + innerId
-                                            + "> "
-                                            + member.Name
-                                            + " (∅) ");
-
+                        _nodeBuilder.Append($"| <{innerId}> {member.Name} (∅) ");
                     }
                     else if (member.GetValue(sourceObject).GetType().IsValueType)
                     {
-
                         if (_whitelist.Contains(member.Name))
                         {
-                            _nodeBuilder.Append("| <"
-                                                + innerId
-                                                + "> "
-                                                + member.Name
-                                                + ": "
-                                                + member.GetValue(sourceObject)
-                                                + " ");
+                            _nodeBuilder.Append($"| <{innerId}> {member.Name}: {member.GetValue(sourceObject)} ");
                         }
                         else
                         {
-                            _nodeBuilder.Append("| <"
-                                                + innerId
-                                                + "> "
-                                                + member.Name
-                                                + " ");
+                            _nodeBuilder.Append($"| <{innerId}> {member.Name} ");
                         }
-
                     }
                     //reference type
                     else
                     {
-                        _nodeBuilder.Append("| <"
-                                            + innerId
-                                            + "> "
-                                            + member.Name
-                                            + " ");
-
+                        _nodeBuilder.Append($"| <{innerId}> {member.Name} ");
 
                         recursiveCalls.Add(new Action(() =>
                             VisualizeRecursively(sourceObject, member, destination)));
                     }
                 }
             }
-
-            //invoke all recursive calls for each reference typed member
+            //invoke all recursive calls for this level
             foreach (var call in recursiveCalls) call.Invoke();
-
         }
     }
 

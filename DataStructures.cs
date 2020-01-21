@@ -82,22 +82,72 @@ namespace DataStructureVisualization
 
     }
 
+    class PersonDB
+    {
+        private int personCount = 5;
+        public Person[] Data { get; set; }
+    }
+
+
+    public class SingleLink
+    {
+        public int Value { get; set; }
+        public SingleLink NextLink { get; set; }
+
+        public SingleLink(int val)
+        {
+            Value = val;
+        }
+
+        public override string ToString()
+        {
+            return Value.ToString();
+        }
+    }
+
+
+
+    public class SingleLinkedList
+    {
+        private SingleLink _first;
+        public bool IsEmpty
+        {
+            get
+            {
+                return _first == null;
+            }
+        }
+        public SingleLinkedList()
+        {
+            _first = null;
+        }
+
+        public SingleLink Insert(int val)
+        {
+            // Creates a link, sets its link to the first item and then makes this the first item in the list.
+            SingleLink link = new SingleLink(val);
+            link.NextLink = _first;
+            _first = link;
+            return link;
+        }
+    }
+
     //from https://yetanotherchris.dev/csharp/linked-list-and-double-linked-list-in-csharp/
     public class DoubleLink
     {
         public int Value { get; set; }
-        public int SomeOtherValue { get; set; }
-        public DateTime CreationDate { get; }
         public DoubleLink PreviousLink { get; set; }
         public DoubleLink NextLink { get; set; }
 
         public DoubleLink(int val)
         {
             Value = val;
-            SomeOtherValue = val * 2;
-            CreationDate = DateTime.Now;
         }
 
+        public override string ToString()
+        {
+            return Value.ToString();
+        }
     }
 
     public class DoubleLinkedList
@@ -154,11 +204,10 @@ namespace DataStructureVisualization
 
 
         ///// New operations
-        public void InsertAfter(DoubleLink link, int title)
+        public void InsertAfter(DoubleLink link, int val)
         {
-            if (link == null)
-                return;
-            DoubleLink newLink = new DoubleLink(title);
+            if (link == null) return;
+            DoubleLink newLink = new DoubleLink(val);
             newLink.PreviousLink = link;
             // Update the 'after' link's next reference, so its previous points to the new one
             if (link.NextLink != null)
@@ -182,15 +231,15 @@ namespace DataStructureVisualization
 
     class Person
     {
-        public String Name {get;}
-        public int Age {get;}
-        public Person Spouse {get; set;}
+        public String Name { get; }
+        public int Age { get; }
+        public Person Spouse { get; set; }
         public List<Person> kids;
         public List<Person> friends;
 
-        private Person() {}
+        private Person() { }
 
-        public Person(String name, int age) 
+        public Person(String name, int age)
         {
             this.Name = name;
             this.Age = age;
@@ -198,6 +247,342 @@ namespace DataStructureVisualization
             this.friends = new List<Person>();
         }
     }
+
+    public struct KeyValue<K, V>
+    {
+        public K Key { get; set; }
+        public V Value { get; set; }
+    }
+
+
+    public class FixedSizeGenericHashTable<K, V>
+    {
+        private readonly int size;
+        private readonly LinkedList<KeyValue<K, V>>[] items;
+
+        public FixedSizeGenericHashTable(int size)
+        {
+            this.size = size;
+            items = new LinkedList<KeyValue<K, V>>[size];
+        }
+
+        protected int GetArrayPosition(K key)
+        {
+            int position = key.GetHashCode() % size;
+            return Math.Abs(position);
+        }
+
+        public V Find(K key)
+        {
+            int position = GetArrayPosition(key);
+            LinkedList<KeyValue<K, V>> linkedList = GetLinkedList(position);
+            foreach (KeyValue<K, V> item in linkedList)
+            {
+                if (item.Key.Equals(key))
+                {
+                    return item.Value;
+                }
+            }
+
+            return default(V);
+        }
+
+        public void Add(K key, V value)
+        {
+            int position = GetArrayPosition(key);
+            LinkedList<KeyValue<K, V>> linkedList = GetLinkedList(position);
+            KeyValue<K, V> item = new KeyValue<K, V>() { Key = key, Value = value };
+            linkedList.AddLast(item);
+        }
+
+        public void Remove(K key)
+        {
+            int position = GetArrayPosition(key);
+            LinkedList<KeyValue<K, V>> linkedList = GetLinkedList(position);
+            bool itemFound = false;
+            KeyValue<K, V> foundItem = default(KeyValue<K, V>);
+            foreach (KeyValue<K, V> item in linkedList)
+            {
+                if (item.Key.Equals(key))
+                {
+                    itemFound = true;
+                    foundItem = item;
+                }
+            }
+
+            if (itemFound)
+            {
+                linkedList.Remove(foundItem);
+            }
+        }
+
+        protected LinkedList<KeyValue<K, V>> GetLinkedList(int position)
+        {
+            LinkedList<KeyValue<K, V>> linkedList = items[position];
+            if (linkedList == null)
+            {
+                linkedList = new LinkedList<KeyValue<K, V>>();
+                items[position] = linkedList;
+            }
+
+            return linkedList;
+        }
+
+        //from https://stackoverflow.com/questions/625947/what-is-an-example-of-a-hashtable-implementation-in-c
+    }
+
+    //from https://simpledevcode.wordpress.com/2014/09/16/avl-tree-in-c/
+    public class AVL
+    {
+        class Node
+        {
+            public int data;
+            public Node left;
+            public Node right;
+            public Node(int data)
+            {
+                this.data = data;
+            }
+        }
+        Node root;
+        public AVL()
+        {
+        }
+        public void Add(int data)
+        {
+            Node newItem = new Node(data);
+            if (root == null)
+            {
+                root = newItem;
+            }
+            else
+            {
+                root = RecursiveInsert(root, newItem);
+            }
+        }
+        private Node RecursiveInsert(Node current, Node n)
+        {
+            if (current == null)
+            {
+                current = n;
+                return current;
+            }
+            else if (n.data < current.data)
+            {
+                current.left = RecursiveInsert(current.left, n);
+                current = balance_tree(current);
+            }
+            else if (n.data > current.data)
+            {
+                current.right = RecursiveInsert(current.right, n);
+                current = balance_tree(current);
+            }
+            return current;
+        }
+        private Node balance_tree(Node current)
+        {
+            int b_factor = balance_factor(current);
+            if (b_factor > 1)
+            {
+                if (balance_factor(current.left) > 0)
+                {
+                    current = RotateLL(current);
+                }
+                else
+                {
+                    current = RotateLR(current);
+                }
+            }
+            else if (b_factor < -1)
+            {
+                if (balance_factor(current.right) > 0)
+                {
+                    current = RotateRL(current);
+                }
+                else
+                {
+                    current = RotateRR(current);
+                }
+            }
+            return current;
+        }
+        public void Delete(int target)
+        {//and here
+            root = Delete(root, target);
+        }
+        private Node Delete(Node current, int target)
+        {
+            Node parent;
+            if (current == null)
+            { return null; }
+            else
+            {
+                //left subtree
+                if (target < current.data)
+                {
+                    current.left = Delete(current.left, target);
+                    if (balance_factor(current) == -2)//here
+                    {
+                        if (balance_factor(current.right) <= 0)
+                        {
+                            current = RotateRR(current);
+                        }
+                        else
+                        {
+                            current = RotateRL(current);
+                        }
+                    }
+                }
+                //right subtree
+                else if (target > current.data)
+                {
+                    current.right = Delete(current.right, target);
+                    if (balance_factor(current) == 2)
+                    {
+                        if (balance_factor(current.left) >= 0)
+                        {
+                            current = RotateLL(current);
+                        }
+                        else
+                        {
+                            current = RotateLR(current);
+                        }
+                    }
+                }
+                //if target is found
+                else
+                {
+                    if (current.right != null)
+                    {
+                        //delete its inorder successor
+                        parent = current.right;
+                        while (parent.left != null)
+                        {
+                            parent = parent.left;
+                        }
+                        current.data = parent.data;
+                        current.right = Delete(current.right, parent.data);
+                        if (balance_factor(current) == 2)//rebalancing
+                        {
+                            if (balance_factor(current.left) >= 0)
+                            {
+                                current = RotateLL(current);
+                            }
+                            else { current = RotateLR(current); }
+                        }
+                    }
+                    else
+                    {   //if current.left != null
+                        return current.left;
+                    }
+                }
+            }
+            return current;
+        }
+        public void Find(int key)
+        {
+            if (Find(key, root).data == key)
+            {
+                Console.WriteLine("{0} was found!", key);
+            }
+            else
+            {
+                Console.WriteLine("Nothing found!");
+            }
+        }
+        private Node Find(int target, Node current)
+        {
+
+            if (target < current.data)
+            {
+                if (target == current.data)
+                {
+                    return current;
+                }
+                else
+                    return Find(target, current.left);
+            }
+            else
+            {
+                if (target == current.data)
+                {
+                    return current;
+                }
+                else
+                    return Find(target, current.right);
+            }
+
+        }
+        public void DisplayTree()
+        {
+            if (root == null)
+            {
+                Console.WriteLine("Tree is empty");
+                return;
+            }
+            InOrderDisplayTree(root);
+            Console.WriteLine();
+        }
+        private void InOrderDisplayTree(Node current)
+        {
+            if (current != null)
+            {
+                InOrderDisplayTree(current.left);
+                Console.Write("({0}) ", current.data);
+                InOrderDisplayTree(current.right);
+            }
+        }
+        private int max(int l, int r)
+        {
+            return l > r ? l : r;
+        }
+        private int getHeight(Node current)
+        {
+            int height = 0;
+            if (current != null)
+            {
+                int l = getHeight(current.left);
+                int r = getHeight(current.right);
+                int m = max(l, r);
+                height = m + 1;
+            }
+            return height;
+        }
+        private int balance_factor(Node current)
+        {
+            int l = getHeight(current.left);
+            int r = getHeight(current.right);
+            int b_factor = l - r;
+            return b_factor;
+        }
+        private Node RotateRR(Node parent)
+        {
+            Node pivot = parent.right;
+            parent.right = pivot.left;
+            pivot.left = parent;
+            return pivot;
+        }
+        private Node RotateLL(Node parent)
+        {
+            Node pivot = parent.left;
+            parent.left = pivot.right;
+            pivot.right = parent;
+            return pivot;
+        }
+        private Node RotateLR(Node parent)
+        {
+            Node pivot = parent.left;
+            parent.left = RotateRR(pivot);
+            return RotateLL(parent);
+        }
+        private Node RotateRL(Node parent)
+        {
+            Node pivot = parent.right;
+            parent.right = RotateLL(pivot);
+            return RotateRR(parent);
+        }
+    }
+
 
     //====================================================
     //| Downloaded From                                  |
