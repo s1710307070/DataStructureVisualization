@@ -85,18 +85,17 @@ namespace DataStructureVisualization
     //from https://yetanotherchris.dev/csharp/linked-list-and-double-linked-list-in-csharp/
     public class DoubleLink
     {
-        public string Title { get; set; }
+        public int Value { get; set; }
+        public int SomeOtherValue { get; set; }
+        public DateTime CreationDate { get; }
         public DoubleLink PreviousLink { get; set; }
         public DoubleLink NextLink { get; set; }
 
-        public DoubleLink(string title)
+        public DoubleLink(int val)
         {
-            Title = title;
-        }
-
-        public override string ToString()
-        {
-            return Title;
+            Value = val;
+            SomeOtherValue = val * 2;
+            CreationDate = DateTime.Now;
         }
 
     }
@@ -116,10 +115,10 @@ namespace DataStructureVisualization
             _first = null;
         }
 
-        public DoubleLink Insert(string title)
+        public DoubleLink Insert(int val)
         {
             // Creates a link, sets its link to the first item and then makes this the first item in the list.
-            DoubleLink link = new DoubleLink(title);
+            DoubleLink link = new DoubleLink(val);
             link.NextLink = _first;
             if (_first != null)
                 _first.PreviousLink = link;
@@ -155,9 +154,9 @@ namespace DataStructureVisualization
 
 
         ///// New operations
-        public void InsertAfter(DoubleLink link, string title)
+        public void InsertAfter(DoubleLink link, int title)
         {
-            if (link == null || string.IsNullOrEmpty(title))
+            if (link == null)
                 return;
             DoubleLink newLink = new DoubleLink(title);
             newLink.PreviousLink = link;

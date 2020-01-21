@@ -21,20 +21,21 @@ namespace DataStructureVisualization
             }
 
             
-            //double linked list for testing
             {
                 DoubleLinkedList testDoubleList = new DoubleLinkedList();
-                testDoubleList.Insert("1");
-                testDoubleList.Insert("2");
-                testDoubleList.Insert("3");
-                testDoubleList.Insert("4");
-                testDoubleList.Insert("5");
+                testDoubleList.Insert(1);
+                testDoubleList.Insert(2);
+                testDoubleList.Insert(3);
 
-                //DataStructureVisualizer.Visualize(testDoubleList);
-                List<String> testList3 = new List<String>() { "Title" };
-                DataStructureVisualizer.Visualize(testDoubleList, testList3);
+                List<String> whiteList = new List<String>() { "Value" };
+                List<String> blackList = new List<String>() { "SomeOtherValue", "CreationDate" };
+                DataStructureVisualizer.Visualize(testDoubleList, whiteList, blackList);
+
+
+
+                //DataStructureVisualizer.Visualize(testDoubleList, whiteList);
             }
-           
+
 
             //tests with skip list implementation 
             {
