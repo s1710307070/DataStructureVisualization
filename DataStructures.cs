@@ -9,6 +9,18 @@ namespace DataStructureVisualization
     {
     }
 
+    public class Student
+    {
+        public int Age {get; set;}
+        public string Name {get; set;}
+
+        public Student(int age, string name)
+        {
+            Age = age;
+            Name = name;
+        }
+    }
+
     public class Node
     {
         //public static int someId = 0;
@@ -107,7 +119,7 @@ namespace DataStructureVisualization
 
 
 
-    public class SingleLinkedList
+    public class SinglyLinkedList
     {
         private SingleLink _first;
         public bool IsEmpty
@@ -117,7 +129,7 @@ namespace DataStructureVisualization
                 return _first == null;
             }
         }
-        public SingleLinkedList()
+        public SinglyLinkedList()
         {
             _first = null;
         }
@@ -150,7 +162,7 @@ namespace DataStructureVisualization
         }
     }
 
-    public class DoubleLinkedList
+    public class DoublyLinkedList
     {
         private DoubleLink _first;
         public bool IsEmpty
@@ -160,7 +172,7 @@ namespace DataStructureVisualization
                 return _first == null;
             }
         }
-        public DoubleLinkedList()
+        public DoublyLinkedList()
         {
             _first = null;
         }

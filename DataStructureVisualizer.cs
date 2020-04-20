@@ -145,7 +145,7 @@ namespace DataStructureVisualization
         /// <param name="input">object to be visualized</param>
         /// <param name="whitelistedMembers">members named in whitelist will display values</param>
         /// <param name="blacklistedMembers">members containing blacklisted substrings will be ignored</param>
-        public static void Visualize(dynamic input,
+        public static void Visualize(object input,
                                      IEnumerable<string> whitelistedMembers = null,
                                      IEnumerable<string> blacklistedMembers = null)
         {
@@ -170,7 +170,7 @@ namespace DataStructureVisualization
 
             try
             {
-                VisualizeRecursively(null, input, "");
+                VisualizeRecursively(input: null, component: input, source: "");
             }
             catch (Exception e)
             {

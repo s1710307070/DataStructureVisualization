@@ -42,18 +42,18 @@ namespace DataStructureVisualization
 
             //single linked list (not done)
             {
-                SingleLinkedList singleLinkedList = new SingleLinkedList();
-                singleLinkedList.Insert(100);
-                singleLinkedList.Insert(200);
-                singleLinkedList.Insert(300);
+                SinglyLinkedList SinglyLinkedList = new SinglyLinkedList();
+                SinglyLinkedList.Insert(100);
+                SinglyLinkedList.Insert(200);
+                SinglyLinkedList.Insert(300);
 
                 List<String> testWhiteList12 = new List<String>() { "data" };
-                DataStructureVisualizer.Visualize(singleLinkedList, testWhiteList12);
+                DataStructureVisualizer.Visualize(SinglyLinkedList, testWhiteList12);
             }
 
             //double linked list for testing
             {
-                DoubleLinkedList testDoubleList = new DoubleLinkedList();
+                DoublyLinkedList testDoubleList = new DoublyLinkedList();
                 testDoubleList.Insert(3);
                 testDoubleList.Insert(2);
                 testDoubleList.Insert(1);
@@ -153,12 +153,22 @@ namespace DataStructureVisualization
             //test with array
             {
                 int[] testArr = new int[10];
-                for (int i = 0; i < 10; i++) testArr[i] = i;
+                for (int i = 0; i < 10; i++) testArr[i] = 10-i;
 
                 DataStructureVisualizer.Visualize(testArr);
 
             }
 
+
+            //test with Student
+            {
+                Student student = new Student(20, "David");
+                List<string> whitelist = new List<string>() { "Age" };
+                List<string> blacklist = new List<string>() { "Name" };
+                DataStructureVisualizer.Visualize(student);
+                DataStructureVisualizer.Visualize(student, whitelist);
+                DataStructureVisualizer.Visualize(student, whitelist, blacklist);
+            }
 
 
 
